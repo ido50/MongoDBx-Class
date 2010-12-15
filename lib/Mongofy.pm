@@ -3,8 +3,7 @@ package Mongofy;
 use Moose;
 use namespace::autoclean;
 use MongoDB;
-use Mongofy::Collection;
-use Mongofy::Cursor;
+use Mongofy::Connection;
 use Carp;
 
 # ABSTRACT: Flexible ORM for MongoDB databases.
@@ -13,9 +12,7 @@ has 'namespace' => (is => 'ro', isa => 'Str', required => 1);
 
 has 'conn' => (is => 'ro', isa => 'MongoDB::Connection', predicate => 'is_connected', writer => '_set_conn', clearer => '_clear_conn');
 
-has 'db' => (is => 'ro', isa => 'MongoDB::Database', predicate => 'has_db', writer => '_set_db', clearer => '_clear_db');
-
-#has 'doc_classes' => (is => 'ro', isa => 'HashRef', default => sub { {} });
+has 'doc_classes' => (is => 'ro', isa => 'HashRef[Moose::Meta::Class]', default => sub { {} });
 
 =head1 NAME
 
@@ -55,18 +52,9 @@ C<MyApp::Schema>. Your document classes, structurally speaking, should be
 descendants of this namespace (e.g. C<MyApp::Schema::Article>,
 C<MyApp::Schema::Post>).
 
-=head2 colls
-
-A hash-ref of all collection/document-class objects loaded from your schema.
-To be more specific, every object in this hash-ref is a Moose class that
-implements the L<Mongofy::Document> or L<Mongofy::EmbeddedDocument>
-roles. The keys of this hash-ref are the package names of the document
-classes, minus the namespace, so the key for the C<MyApp::Schema::Article>
-document class, for example, is C<Article>.
-
 =head1 OBJECT METHODS
 
-=head2 connect( database => $db_name, [host => $host], [port => $port] )
+=head2 connect( [host => $host], [port => $port] )
 
 Initiates a new connection to a MongoDB server running on a certain host
 and listening to a certain port, and sets the working database. If a host
@@ -78,35 +66,10 @@ is not provided, 'localhost' is used. If a port is not provided, 27017
 sub connect {
 	my ($self, %opts) = @_;
 
-	croak "You must provide a MongoDB database name to use with Mongofy."
-		unless $opts{database};
-
 	$opts{host} ||= 'localhost';
 	$opts{port} ||= 27017;
 
-	my $conn = MongoDB::Connection->new(host => $opts{host}, port => $opts{port});
-	$self->_set_conn($conn);
-	$self->_set_db($conn->get_database($opts{database});
-}
-
-=head2 get_collection( $name )
-
-=head2 coll( $name )
-
-Returns a L<Mongofy::Collection> object representing the collection named
-C<$name>.
-
-=cut
-
-sub get_collection {
-	croak "You must provide the name of the Mongofy collection to fetch."
-		unless $_[1];
-
-	Mongofy::Collection->new(name => $_[1]);
-}
-
-sub coll {
-	shift->get_collection(@_);
+	$self->_set_conn(Mongofy::Connection->new(host => $opts{host}, port => $opts{port}));
 }
 
 =head1 INTERNAL METHODS
@@ -119,11 +82,11 @@ sub _load_schema {
 	# load the classes
 	require Module::Pluggable;
 	Module::Pluggable->import(search_path => [$self->namespace], require => 1, sub_name => '_doc_classes');
-	#foreach ($self->_doc_classes) {
-	#	my $name = $_;
-	#	$name =~ s/$self->{namespace}:://;
-	#	$self->doc_classes->{$name} = $_;
-	#}
+	foreach ($self->_doc_classes) {
+		my $name = $_;
+		$name =~ s/$self->{namespace}:://;
+		$self->doc_classes->{$name} = $_->meta;
+	}
 }
 
 =head1 AUTHOR
