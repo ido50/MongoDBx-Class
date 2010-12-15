@@ -11,8 +11,9 @@ around 'next' => sub {
 
 	my $object = $self->$orig || return;
 
+	return $object;
 	# expand the object
-	return $self->expand($object);
+	#return $self->expand($object);
 };
 
 __PACKAGE__->meta->make_immutable;
