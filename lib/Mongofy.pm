@@ -3,17 +3,19 @@ package Mongofy;
 use Moose;
 use namespace::autoclean;
 use MongoDB;
+use Mongofy::Collection;
+use Mongofy::Cursor;
 use Carp;
 
 # ABSTRACT: Flexible ORM for MongoDB databases.
 
 has 'namespace' => (is => 'ro', isa => 'Str', required => 1);
 
-has 'colls' => (is => 'ro', isa => 'HashRef', default => sub { {} });
-
 has 'conn' => (is => 'ro', isa => 'MongoDB::Connection', predicate => 'is_connected', writer => '_set_conn', clearer => '_clear_conn');
 
 has 'db' => (is => 'ro', isa => 'MongoDB::Database', predicate => 'has_db', writer => '_set_db', clearer => '_clear_db');
+
+#has 'doc_classes' => (is => 'ro', isa => 'HashRef', default => sub { {} });
 
 =head1 NAME
 
@@ -25,6 +27,8 @@ Mongofy - Flexible ORM for MongoDB databases.
 
 	my $db = Mongofy->new( namespace => 'MyApp::Schema' );
 	$db->connect(host => 'localhost', port => 27017, database => 'db_name');
+
+	$db->coll('coll_name')->query({ name => 'asdf' }, { doc_class => 'People' });
 
 =head1 DESCRIPTION
 
@@ -85,21 +89,24 @@ sub connect {
 	$self->_set_db($conn->get_database($opts{database});
 }
 
+=head2 get_collection( $name )
+
 =head2 coll( $name )
 
-Returns the collection object named C<$name>. This is the package name
-of the collection class, minus the namespace, so C<MyApp::Schema::Person>
-simply becomes C<Person>.
+Returns a L<Mongofy::Collection> object representing the collection named
+C<$name>.
 
 =cut
 
-sub coll {
-	my ($self, $name) = @_;
-
+sub get_collection {
 	croak "You must provide the name of the Mongofy collection to fetch."
-		unless $name;
+		unless $_[1];
 
-	return $self->colls->{$name};
+	Mongofy::Collection->new(name => $_[1]);
+}
+
+sub coll {
+	shift->get_collection(@_);
 }
 
 =head1 INTERNAL METHODS
@@ -111,12 +118,12 @@ sub _load_schema {
 
 	# load the classes
 	require Module::Pluggable;
-	Module::Pluggable->import(search_path => [$self->namespace], instantiate => 'new', sub_name => 'doc_classes');
-	foreach ($self->doc_classes) {
-		my $name = ref $_;
-		$name =~ s/$self->{namespace}:://;
-		$self->colls->{$name} = $_;
-	}
+	Module::Pluggable->import(search_path => [$self->namespace], require => 1, sub_name => '_doc_classes');
+	#foreach ($self->_doc_classes) {
+	#	my $name = $_;
+	#	$name =~ s/$self->{namespace}:://;
+	#	$self->doc_classes->{$name} = $_;
+	#}
 }
 
 =head1 AUTHOR
