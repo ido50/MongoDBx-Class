@@ -82,7 +82,7 @@ around 'batch_insert' => sub {
 			} elsif (ref $_->{$attr} && $_->{$attr}->does('MongoDBX::Class::EmbeddedDocument')) {
 				my $hash = {};
 				foreach my $ha (keys %{$_->{attr}}) {
-					next if $ha =~ m!^_!;
+					next if $ha eq '_collection';
 					$hash->{$ha} = $_->{attr}->{$ha};
 				}
 				$_->{$attr} = $hash;

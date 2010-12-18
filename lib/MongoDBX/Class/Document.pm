@@ -23,6 +23,22 @@ sub oid {
 	shift->id;
 }
 
+sub update {
+	my $self = shift;
+
+	if (scalar @_) {
+		$self->_collection->update({ _id => $self->_id }, { '$set' => $_[0] }, $_[1]);
+	} else {
+		my $new_doc;
+		foreach (ref($self)->meta->get_all_attributes) {
+			my $name = $_->name;
+			next if $name eq '_collection';
+			$new_doc->{$name} = $self->$name;
+		}
+		$self->_collection->update({ _id => $self->_id }, $new_doc, $_[1]);
+	}
+}
+
 sub delete {
 	my $self = shift;
 
