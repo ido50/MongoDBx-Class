@@ -15,6 +15,8 @@ MongoDBX::Class::Connection - A connection to a MongoDB server
 
 has 'doc_classes' => (is => 'ro', isa => 'HashRef', required => 1);
 
+has 'safe' => (is => 'rw', isa => 'Bool', default => 0);
+
 override 'get_database' => sub {
 	MongoDBX::Class::Database->new(_connection => shift, name => shift);
 };
@@ -49,6 +51,29 @@ sub expand {
 				ref_coll => $doc->{$name}->{'$ref'},
 				ref_id => $doc->{$name}->{'$id'},
 			);
+		} elsif ($_->{isa} eq 'ArrayRef[MongoDBX::Class::Reference]') {
+			my $name = $_->name;
+			$name =~ s!^_!!;
+
+			next unless $doc->{$name} && ref $doc->{$name} eq 'ARRAY';
+
+			foreach (@{$doc->{$name}}) {
+				push(@{$attrs{$_->name}}, MongoDBX::Class::Reference->new(
+					_collection => $coll,
+					ref_coll => $doc->{$name}->{'$ref'},
+					ref_id => $doc->{$name}->{'$id'},
+				));
+			}				
+		} elsif ($_->does('MongoDBX::Class::EmbeddedDocument')) {
+			next unless $doc->{$_->name};
+			if ($_->{isa} =~ m/^ArrayRef/) {
+				next unless ref $doc->{$_->name} eq 'ARRAY';
+				foreach my $a (@{$doc->{$_->name}}) {
+					push(@{$attrs{$_->name}}, $self->expand($coll_ns, $a));
+				}
+			} else {
+				$attrs{$_->name} = $self->expand($coll_ns, $doc->{$_->name});
+			}
 		} else {
 			next unless $doc->{$_->name};
 			$attrs{$_->name} = $doc->{$_->name};
@@ -64,8 +89,8 @@ Ido Perlmuter, C<< <ido at ido50.net> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-MongoDBX::Class at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBX::Class>. I will be notified, and then you'll
+Please report any bugs or feature requests to C<bug-mongodbx-class at rt.cpan.org>, or through
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBX-Class>. I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 =head1 SUPPORT

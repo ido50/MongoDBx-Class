@@ -72,6 +72,9 @@ around 'find_one' => sub {
 around 'batch_insert' => sub {
 	my ($orig, $self, $docs, $opts) = @_;
 
+	$opts ||= {};
+	$opts->{safe} = 1 if $self->_database->_connection->safe && !defined $opts->{safe};
+
 	foreach (@$docs) {
 		foreach my $attr (keys %$_) {
 			if (ref $_->{$attr} && $_->{$attr}->does('MongoDBX::Class::Document')) {
@@ -87,7 +90,7 @@ around 'batch_insert' => sub {
 		}
 	}
 
-	if ($opts && ref $opts eq 'HASH' && $opts->{safe}) {
+	if ($opts->{safe}) {
 		return map { $self->find_one($_) } $self->$orig($docs, $opts);
 	} else {
 		return $self->$orig($docs, $opts);
@@ -110,8 +113,8 @@ Ido Perlmuter, C<< <ido at ido50.net> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-MongoDBX::Class at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBX::Class>. I will be notified, and then you'll
+Please report any bugs or feature requests to C<bug-mongodbx-class at rt.cpan.org>, or through
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBX-Class>. I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 =head1 SUPPORT
