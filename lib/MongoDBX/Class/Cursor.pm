@@ -1,19 +1,16 @@
-package Mongofy::Cursor;
+package MongoDBX::Class::Cursor;
 
 use Moose;
 use namespace::autoclean;
-use Carp;
 
 extends 'MongoDB::Cursor';
 
 around 'next' => sub {
 	my ($orig, $self) = (shift, shift);
 
-	my $object = $self->$orig || return;
+	my $doc = $self->$orig || return;
 
-	return $object;
-	# expand the object
-	#return $self->expand($object);
+	return $self->_connection->expand($self->_ns, $doc);
 };
 
 __PACKAGE__->meta->make_immutable;

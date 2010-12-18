@@ -1,8 +1,7 @@
-package Mongofy::Collection;
+package MongoDBX::Class::Collection;
 
 use Moose;
 use namespace::autoclean;
-use Carp;
 
 extends 'MongoDB::Collection';
 
@@ -33,7 +32,7 @@ override 'find' => sub {
 		$q = $query ? $query : {};
 	}
 
-	my $cursor = Mongofy::Cursor->new(
+	my $cursor = MongoDBX::Class::Cursor->new(
 		_connection => $self->_database->_connection,
 		_ns => $self->full_name, 
 		_query => $q, 
@@ -51,32 +50,42 @@ sub search {
 }
 
 around 'find_one' => sub {
-	my ($orig, $self, $query, $fields) = @_;
+	my ($orig, $self, $orig_query, $fields) = @_;
 
-	$query ||= {};
+	my $query = {};
 
-	if (ref $query eq 'SCALAR') {
-		$query->{_id} = MongoDB::OID->new(value => $query);
-	} elsif (ref $query eq 'MongoDB::OID') {
-		$query->{_id} = $query;
+	if ($orig_query && ref $orig_query eq 'SCALAR') {
+		$query->{_id} = MongoDB::OID->new(value => $orig_query);
+	} elsif ($orig_query && ref $orig_query eq 'MongoDB::OID') {
+		$query->{_id} = $orig_query;
 	}
 
 	return $self->$orig($query, $fields);
 };
 
-around 'insert' => sub {
-	my ($orig, $self) = (shift, shift);
-
-	my $id = $self->$orig(@_);
-
-	return $self->find_one($id) if $id;
-	return;
-};
-
 around 'batch_insert' => sub {
-	my ($orig, $self) = (shift, shift);
+	my ($orig, $self, $docs, $opts) = @_;
 
-	return map { $self->find_one($_) } $self->$orig(@_);
+	foreach (@$docs) {
+		foreach my $attr (keys %$_) {
+			if (ref $_->{$attr} && $_->{$attr}->does('MongoDBX::Class::Document')) {
+				$_->{$attr} = { '$ref' => $_->{$attr}->_collection->name, '$id' => $_->{$attr}->_id };
+			} elsif (ref $_->{$attr} && $_->{$attr}->does('MongoDBX::Class::EmbeddedDocument')) {
+				my $hash = {};
+				foreach my $ha (keys %{$_->{attr}}) {
+					next if $ha =~ m!^_!;
+					$hash->{$ha} = $_->{attr}->{$ha};
+				}
+				$_->{$attr} = $hash;
+			}
+		}
+	}
+
+	if ($opts && ref $opts eq 'HASH' && $opts->{safe}) {
+		return map { $self->find_one($_) } $self->$orig($docs, $opts);
+	} else {
+		return $self->$orig($docs, $opts);
+	}
 };
 
 around 'ensure_index' => sub {

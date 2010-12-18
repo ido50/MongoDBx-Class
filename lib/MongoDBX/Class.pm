@@ -1,9 +1,13 @@
-package Mongofy;
+package MongoDBX::Class;
 
 use Moose;
 use namespace::autoclean;
 use MongoDB;
-use Mongofy::Connection;
+use MongoDBX::Class::Connection;
+use MongoDBX::Class::Database;
+use MongoDBX::Class::Collection;
+use MongoDBX::Class::Cursor;
+use MongoDBX::Class::Reference;
 use Carp;
 
 # ABSTRACT: Flexible ORM for MongoDB databases.
@@ -12,20 +16,22 @@ has 'namespace' => (is => 'ro', isa => 'Str', required => 1);
 
 has 'conn' => (is => 'ro', isa => 'MongoDB::Connection', predicate => 'is_connected', writer => '_set_conn', clearer => '_clear_conn');
 
-has 'doc_classes' => (is => 'ro', isa => 'HashRef[Moose::Meta::Class]', default => sub { {} });
+has 'doc_classes' => (is => 'ro', isa => 'HashRef', default => sub { {} });
 
 =head1 NAME
 
-Mongofy - Flexible ORM for MongoDB databases.
+MongoDBX::Class - Flexible ORM for MongoDB databases.
 
 =head1 SYNOPSIS
 
-	use Mongofy;
+	use MongoDBX::Class;
 
-	my $db = Mongofy->new( namespace => 'MyApp::Schema' );
+	my $db = MongoDBX::Class->new( namespace => 'MyApp::Schema' );
 	$db->connect(host => 'localhost', port => 27017, database => 'db_name');
 
 	$db->coll('coll_name')->query({ name => 'asdf' }, { doc_class => 'People' });
+	
+	has_many 'articles' => (is => 'rw', isa => 'Article', coll => 'coll_name', ref => 'author')
 
 =head1 DESCRIPTION
 
@@ -39,7 +45,7 @@ connection to a database is made yet.
 
 =cut
 
-after 'new' => sub {
+sub BUILD {
 	shift->_load_schema;
 }
 
@@ -69,7 +75,7 @@ sub connect {
 	$opts{host} ||= 'localhost';
 	$opts{port} ||= 27017;
 
-	$self->_set_conn(Mongofy::Connection->new(host => $opts{host}, port => $opts{port}));
+	$self->_set_conn(MongoDBX::Class::Connection->new(host => $opts{host}, port => $opts{port}, doc_classes => $self->doc_classes));
 }
 
 =head1 INTERNAL METHODS
@@ -85,7 +91,7 @@ sub _load_schema {
 	foreach ($self->_doc_classes) {
 		my $name = $_;
 		$name =~ s/$self->{namespace}:://;
-		$self->doc_classes->{$name} = $_->meta;
+		$self->doc_classes->{$name} = $_;
 	}
 }
 
@@ -95,15 +101,15 @@ Ido Perlmuter, C<< <ido at ido50.net> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-mongofy at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Mongofy>. I will be notified, and then you'll
+Please report any bugs or feature requests to C<bug-MongoDBX::Class at rt.cpan.org>, or through
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBX::Class>. I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
-	perldoc Mongofy
+	perldoc MongoDBX::Class
 
 You can also look for information at:
 
@@ -111,19 +117,19 @@ You can also look for information at:
 
 =item * RT: CPAN's request tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Mongofy>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=MongoDBX::Class>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/Mongofy>
+L<http://annocpan.org/dist/MongoDBX::Class>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/Mongofy>
+L<http://cpanratings.perl.org/d/MongoDBX::Class>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/Mongofy/>
+L<http://search.cpan.org/dist/MongoDBX::Class/>
 
 =back
 
