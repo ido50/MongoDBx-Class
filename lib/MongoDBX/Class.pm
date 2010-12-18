@@ -1,5 +1,7 @@
 package MongoDBX::Class;
 
+# ABSTRACT: Flexible ORM for MongoDB databases
+
 use Moose;
 use namespace::autoclean;
 use MongoDB;
@@ -10,8 +12,6 @@ use MongoDBX::Class::Cursor;
 use MongoDBX::Class::Reference;
 use Carp;
 
-# ABSTRACT: Flexible ORM for MongoDB databases.
-
 has 'namespace' => (is => 'ro', isa => 'Str', required => 1);
 
 has 'conn' => (is => 'ro', isa => 'MongoDB::Connection', predicate => 'is_connected', writer => '_set_conn', clearer => '_clear_conn');
@@ -20,18 +20,11 @@ has 'doc_classes' => (is => 'ro', isa => 'HashRef', default => sub { {} });
 
 =head1 NAME
 
-MongoDBX::Class - Flexible ORM for MongoDB databases.
+MongoDBX::Class - Flexible ORM for MongoDB databases
 
 =head1 SYNOPSIS
 
 	use MongoDBX::Class;
-
-	my $db = MongoDBX::Class->new( namespace => 'MyApp::Schema' );
-	$db->connect(host => 'localhost', port => 27017, database => 'db_name');
-
-	$db->coll('coll_name')->query({ name => 'asdf' }, { doc_class => 'People' });
-	
-	has_many 'articles' => (is => 'rw', isa => 'Article', coll => 'coll_name', ref => 'author')
 
 =head1 DESCRIPTION
 
