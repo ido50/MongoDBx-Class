@@ -102,7 +102,7 @@ sub has_many {
 sub holds_one {
 	my ($meta, $name, %opts) = @_;
 
-	$opts{does} = 'MongoDBX::Class::EmbeddedDocument';
+	#$opts{does} = 'MongoDBX::Class::EmbeddedDocument';
 
 	$meta->add_attribute($name => %opts);
 }
@@ -110,9 +110,8 @@ sub holds_one {
 sub holds_many {
 	my ($meta, $name, %opts) = @_;
 
-	my $type = delete $opts{isa};
-	$opts{isa} = "ArrayRef[$type]";
-	$opts{does} = 'MongoDBX::Class::EmbeddedDocument';
+	$opts{isa} = "ArrayRef[$opts{isa}]";
+	#$opts{does} = 'MongoDBX::Class::EmbeddedDocument';
 
 	$meta->add_attribute('_'.$name => %opts);
 	$meta->add_method($name => sub {

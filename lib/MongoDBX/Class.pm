@@ -68,7 +68,7 @@ sub connect {
 	$opts{host} ||= 'localhost';
 	$opts{port} ||= 27017;
 
-	$self->_set_conn(MongoDBX::Class::Connection->new(host => $opts{host}, port => $opts{port}, doc_classes => $self->doc_classes));
+	$self->_set_conn(MongoDBX::Class::Connection->new(host => $opts{host}, port => $opts{port}, namespace => $self->namespace, doc_classes => $self->doc_classes));
 }
 
 =head1 INTERNAL METHODS

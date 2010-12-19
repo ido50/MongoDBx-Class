@@ -13,6 +13,8 @@ MongoDBX::Class::Connection - A connection to a MongoDB server
 
 =cut
 
+has 'namespace' => (is => 'ro', isa => 'Str', required => 1);
+
 has 'doc_classes' => (is => 'ro', isa => 'HashRef', required => 1);
 
 has 'safe' => (is => 'rw', isa => 'Bool', default => 0);
@@ -32,7 +34,11 @@ sub expand {
 
 	return $doc unless exists $doc->{_class} && exists $self->doc_classes->{$doc->{_class}};
 
-	my $dc = $self->doc_classes->{$doc->{_class}};
+	my $dc_name = $doc->{_class};
+	my $ns = $self->namespace;
+	$dc_name =~ s/^${ns}:://;
+
+	my $dc = $self->doc_classes->{$dc_name};
 
 	my %attrs = (
 		_collection => $coll,
