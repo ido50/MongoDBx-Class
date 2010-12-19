@@ -28,7 +28,7 @@ override 'find' => sub {
 	my ($limit, $skip, $sort_by) = @{ $attrs || {} }{qw/limit skip sort_by/};
 
 	$limit ||= 0;
-	$skip||= 0;
+	$skip ||= 0;
 
 	my $q = {};
 	if ($sort_by) {
@@ -64,6 +64,8 @@ around 'find_one' => sub {
 		$query->{_id} = MongoDB::OID->new(value => $orig_query);
 	} elsif ($orig_query && ref $orig_query eq 'MongoDB::OID') {
 		$query->{_id} = $orig_query;
+	} else {
+		$query = $orig_query;
 	}
 
 	return $self->$orig($query, $fields);

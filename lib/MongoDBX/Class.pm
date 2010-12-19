@@ -4,7 +4,7 @@ package MongoDBX::Class;
 
 use Moose;
 use namespace::autoclean;
-use MongoDB;
+use MongoDB 0.40;
 use MongoDBX::Class::Connection;
 use MongoDBX::Class::Database;
 use MongoDBX::Class::Collection;

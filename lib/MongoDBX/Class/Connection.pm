@@ -50,7 +50,7 @@ sub expand {
 			my $name = $_->name;
 			$name =~ s!^_!!;
 			
-			next unless $doc->{$name};
+			next unless $doc->{$name} && exists $doc->{$name}->{'$ref'} && exists $doc->{$name}->{'$id'};
 
 			$attrs{$_->name} = MongoDBX::Class::Reference->new(
 				_collection => $coll,
@@ -70,14 +70,22 @@ sub expand {
 					ref_id => $doc->{$name}->{'$id'},
 				));
 			}				
-		} elsif ($_->does('MongoDBX::Class::EmbeddedDocument')) {
-			next unless $doc->{$_->name};
+		} elsif ($_->documentation && $_->documentation eq 'MongoDBX::Class::EmbeddedDocument') {
+			my $edc_name = $_->{isa};
+			$edc_name =~ s/^${ns}:://;
 			if ($_->{isa} =~ m/^ArrayRef/) {
-				next unless ref $doc->{$_->name} eq 'ARRAY';
-				foreach my $a (@{$doc->{$_->name}}) {
+				my $name = $_->name;
+				$name =~ s!^_!!;
+
+				next unless $doc->{$name} && ref $doc->{$name} eq 'ARRAY';
+
+				foreach my $a (@{$doc->{$name}}) {
+					$a->{_class} = $edc_name;
 					push(@{$attrs{$_->name}}, $self->expand($coll_ns, $a));
 				}
 			} else {
+				next unless $doc->{$_->name};
+				$doc->{$_->name}->{_class} = $edc_name;
 				$attrs{$_->name} = $self->expand($coll_ns, $doc->{$_->name});
 			}
 		} else {
