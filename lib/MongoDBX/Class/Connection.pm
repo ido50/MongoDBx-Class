@@ -50,7 +50,10 @@ sub expand {
 			my $name = $_->name;
 			$name =~ s!^_!!;
 			
-			next unless $doc->{$name} && exists $doc->{$name}->{'$ref'} && exists $doc->{$name}->{'$id'};
+			next unless exists $doc->{$name} &&
+				    ref $doc->{$name} eq 'HASH' &&
+				    exists $doc->{$name}->{'$ref'} &&
+				    exists $doc->{$name}->{'$id'};
 
 			$attrs{$_->name} = MongoDBX::Class::Reference->new(
 				_collection => $coll,
@@ -61,13 +64,14 @@ sub expand {
 			my $name = $_->name;
 			$name =~ s!^_!!;
 
-			next unless $doc->{$name} && ref $doc->{$name} eq 'ARRAY';
+			next unless exists $doc->{$name} &&
+				    ref $doc->{$name} eq 'ARRAY';
 
-			foreach (@{$doc->{$name}}) {
+			foreach my $ref (@{$doc->{$name}}) {
 				push(@{$attrs{$_->name}}, MongoDBX::Class::Reference->new(
 					_collection => $coll,
-					ref_coll => $doc->{$name}->{'$ref'},
-					ref_id => $doc->{$name}->{'$id'},
+					ref_coll => $ref->{'$ref'},
+					ref_id => $ref->{'$id'},
 				));
 			}				
 		} elsif ($_->documentation && $_->documentation eq 'MongoDBX::Class::EmbeddedDocument') {
@@ -77,19 +81,20 @@ sub expand {
 				my $name = $_->name;
 				$name =~ s!^_!!;
 
-				next unless $doc->{$name} && ref $doc->{$name} eq 'ARRAY';
+				next unless exists $doc->{$name} &&
+					    ref $doc->{$name} eq 'ARRAY';
 
 				foreach my $a (@{$doc->{$name}}) {
 					$a->{_class} = $edc_name;
 					push(@{$attrs{$_->name}}, $self->expand($coll_ns, $a));
 				}
 			} else {
-				next unless $doc->{$_->name};
+				next unless exists $doc->{$_->name};
 				$doc->{$_->name}->{_class} = $edc_name;
 				$attrs{$_->name} = $self->expand($coll_ns, $doc->{$_->name});
 			}
 		} else {
-			next unless $doc->{$_->name};
+			next unless exists $doc->{$_->name};
 			$attrs{$_->name} = $doc->{$_->name};
 		}
 	}

@@ -32,6 +32,8 @@ override 'find' => sub {
 
 	my $q = {};
 	if ($sort_by) {
+		$sort_by = Tie::IxHash->new(@$sort_by)
+			if ref $sort_by eq 'ARRAY';
 		$q->{'query'} = $query;
 		$q->{'orderby'} = $sort_by;
 	} else {

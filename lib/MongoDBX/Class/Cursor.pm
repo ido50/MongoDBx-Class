@@ -21,6 +21,16 @@ around 'next' => sub {
 	return $self->_connection->expand($self->_ns, $doc);
 };
 
+around 'sort' => sub {
+	my ($orig, $self, $rules) = @_;
+
+	if (ref $rules eq 'ARRAY') {
+		return $self->$orig(Tie::IxHash->new(@$rules));
+	} else {
+		return $self->$orig($rules);
+	}
+};
+
 =head1 AUTHOR
 
 Ido Perlmuter, C<< <ido at ido50.net> >>
