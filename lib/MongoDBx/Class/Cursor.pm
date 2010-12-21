@@ -1,20 +1,34 @@
-package MongoDBX::Class::Database;
+package MongoDBx::Class::Cursor;
 
-# ABSTRACT: A MongoDBX::Class database object
+# ABSTRACT: A MongoDBx::Class cursor/iterator object for query results
 
 use Moose;
 use namespace::autoclean;
 
-extends 'MongoDB::Database';
+extends 'MongoDB::Cursor';
 
 =head1 NAME
 
-MongoDBX::Class::Database - A MongoDBX::Class database object
+MongoDBx::Class::Cursor - A MongoDBx::Class cursor/iterator object for query results
 
 =cut
 
-override 'get_collection' => sub {
-	MongoDBX::Class::Collection->new(_database => shift, name => shift);
+around 'next' => sub {
+	my ($orig, $self) = (shift, shift);
+
+	my $doc = $self->$orig || return;
+
+	return $self->_connection->expand($self->_ns, $doc);
+};
+
+around 'sort' => sub {
+	my ($orig, $self, $rules) = @_;
+
+	if (ref $rules eq 'ARRAY') {
+		return $self->$orig(Tie::IxHash->new(@$rules));
+	} else {
+		return $self->$orig($rules);
+	}
 };
 
 =head1 AUTHOR
@@ -24,14 +38,14 @@ Ido Perlmuter, C<< <ido at ido50.net> >>
 =head1 BUGS
 
 Please report any bugs or feature requests to C<bug-mongodbx-class at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBX-Class>. I will be notified, and then you'll
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBx-Class>. I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
-	perldoc MongoDBX::Class::Database
+	perldoc MongoDBx::Class::Cursor
 
 You can also look for information at:
 
@@ -39,19 +53,19 @@ You can also look for information at:
 
 =item * RT: CPAN's request tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=MongoDBX::Class>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=MongoDBx::Class>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/MongoDBX::Class>
+L<http://annocpan.org/dist/MongoDBx::Class>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/MongoDBX::Class>
+L<http://cpanratings.perl.org/d/MongoDBx::Class>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/MongoDBX::Class/>
+L<http://search.cpan.org/dist/MongoDBx::Class/>
 
 =back
 

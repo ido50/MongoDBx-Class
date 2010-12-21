@@ -1,13 +1,13 @@
-package MongoDBX::Class::Moose;
+package MongoDBx::Class::Moose;
 
-# ABSTRACT: Extends Moose with common relationships for MongoDBX::Class documents
+# ABSTRACT: Extends Moose with common relationships for MongoDBx::Class documents
 
 use Moose ();
 use Moose::Exporter;
 
 =head1 NAME
 
-MongoDBX::Class::Moose - Extends Moose with common relationships for MongoDBX::Class documents
+MongoDBx::Class::Moose - Extends Moose with common relationships for MongoDBx::Class documents
 
 =head1 RELATIONSHIPS
 
@@ -15,12 +15,12 @@ MongoDBX::Class::Moose - Extends Moose with common relationships for MongoDBX::C
 
 Specifies that the document has an attribute which references another,
 supposedly parent, document. The reference is in the form documented by
-L<MongoDBX::Class::Reference>.
+L<MongoDBx::Class::Reference>.
 
 =head2 has_one
 
 Specifies that the document has an attribute which references another
-document. The reference is in the form documented by L<MongoDBX::Class::Reference>.
+document. The reference is in the form documented by L<MongoDBx::Class::Reference>.
 This is entirely equivalent to L</belongs_to>, the two are provided merely
 for convenience.
 
@@ -28,32 +28,32 @@ for convenience.
 
 Specifies that the document has an attribute which holds a list (array)
 of references to other documents. These references are in the form
-documented by L<MongoDBX::Class::Reference>. 
+documented by L<MongoDBx::Class::Reference>. 
 
 =head2 holds_one
 
 Specifies that the document has an attribute which holds an embedded
 document (a.k.a sub-document) in its entirety. The embedded document
-is represented by a class that C<does> L<MongoDBX::Class::EmbeddedDocument>.
+is represented by a class that C<does> L<MongoDBx::Class::EmbeddedDocument>.
 
 =head2 holds_many
 
 Specifies that the document has an attribute which holds a list (array)
 of embedded documents (a.k.a sub-documents) in their entirety. These
 embedded documents are represented by a class that C<does>
-L<MongoDBX::Class::EmbeddedDocument>.
+L<MongoDBx::Class::EmbeddedDocument>.
 
 =head2 joins_one
 
 Specifies that the document is referenced by one other document. The reference
 in the other document to this document is in the form documented by
-L<MongoDBX::Class::Reference>.
+L<MongoDBx::Class::Reference>.
 
 =head2 joins_many
 
 Specifies that the document is referenced by other documents. The references
 in the other document to this document are in the form documented by
-L<MongoDBX::Class::Reference>.
+L<MongoDBx::Class::Reference>.
 
 =cut
 
@@ -65,7 +65,7 @@ Moose::Exporter->setup_import_methods(
 sub belongs_to {
 	my ($meta, $name, %opts) = @_;
 
-	$opts{isa} = 'MongoDBX::Class::Reference';
+	$opts{isa} = 'MongoDBx::Class::Reference';
 
 	$meta->add_attribute('_'.$name => %opts);
 	$meta->add_method($name => sub {
@@ -83,7 +83,7 @@ sub has_one {
 sub has_many {
 	my ($meta, $name, %opts) = @_;
 
-	$opts{isa} = "ArrayRef[MongoDBX::Class::Reference]";
+	$opts{isa} = "ArrayRef[MongoDBx::Class::Reference]";
 
 	$meta->add_attribute('_'.$name => %opts);
 	$meta->add_method($name => sub {
@@ -102,7 +102,7 @@ sub has_many {
 sub holds_one {
 	my ($meta, $name, %opts) = @_;
 
-	$opts{documentation} = 'MongoDBX::Class::EmbeddedDocument';
+	$opts{documentation} = 'MongoDBx::Class::EmbeddedDocument';
 
 	$meta->add_attribute($name => %opts);
 }
@@ -111,7 +111,7 @@ sub holds_many {
 	my ($meta, $name, %opts) = @_;
 
 	$opts{isa} = "ArrayRef[$opts{isa}]";
-	$opts{documentation} = 'MongoDBX::Class::EmbeddedDocument';
+	$opts{documentation} = 'MongoDBx::Class::EmbeddedDocument';
 
 	$meta->add_attribute('_'.$name => %opts);
 	$meta->add_method($name => sub {
@@ -127,7 +127,7 @@ sub joins_one {
 	my ($meta, $name, %opts) = @_;
 
 	$opts{coll} ||= '<same>';
-	$opts{isa} = 'MongoDBX::Class::Reference';
+	$opts{isa} = 'MongoDBx::Class::Reference';
 
 	my $ref = delete $opts{ref};
 	my $coll = delete $opts{coll};
@@ -145,7 +145,7 @@ sub joins_many {
 	my ($meta, $name, %opts) = @_;
 
 	$opts{coll} ||= '<same>';
-	$opts{isa} = 'MongoDBX::Class::Reference';
+	$opts{isa} = 'MongoDBx::Class::Reference';
 
 	my $ref = delete $opts{ref};
 	my $coll = delete $opts{coll};
@@ -166,14 +166,14 @@ Ido Perlmuter, C<< <ido at ido50.net> >>
 =head1 BUGS
 
 Please report any bugs or feature requests to C<bug-mongodbx-class at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBX-Class>. I will be notified, and then you'll
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBx-Class>. I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
-	perldoc MongoDBX::Class::Moose
+	perldoc MongoDBx::Class::Moose
 
 You can also look for information at:
 
@@ -181,19 +181,19 @@ You can also look for information at:
 
 =item * RT: CPAN's request tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=MongoDBX::Class>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=MongoDBx::Class>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/MongoDBX::Class>
+L<http://annocpan.org/dist/MongoDBx::Class>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/MongoDBX::Class>
+L<http://cpanratings.perl.org/d/MongoDBx::Class>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/MongoDBX::Class/>
+L<http://search.cpan.org/dist/MongoDBx::Class/>
 
 =back
 

@@ -1,4 +1,4 @@
-package MongoDBX::Class::Reference;
+package MongoDBx::Class::Reference;
 
 # ABSTRACT: An embedded document representing a reference to a different document (thus establishing a relationship)
 
@@ -7,11 +7,11 @@ use namespace::autoclean;
 
 =head1 NAME
 
-MongoDBX::Class::Reference - An embedded document representing a reference to a different document (thus establishing a relationship)
+MongoDBx::Class::Reference - An embedded document representing a reference to a different document (thus establishing a relationship)
 
 =cut
 
-with 'MongoDBX::Class::EmbeddedDocument';
+with 'MongoDBx::Class::EmbeddedDocument';
 
 has 'ref_coll' => (is => 'rw', isa => 'Str', required => 1);
 
@@ -30,14 +30,14 @@ Ido Perlmuter, C<< <ido at ido50.net> >>
 =head1 BUGS
 
 Please report any bugs or feature requests to C<bug-mongodbx-class at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBX-Class>. I will be notified, and then you'll
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBx-Class>. I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
-	perldoc MongoDBX::Class::Reference
+	perldoc MongoDBx::Class::Reference
 
 You can also look for information at:
 
@@ -45,19 +45,19 @@ You can also look for information at:
 
 =item * RT: CPAN's request tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=MongoDBX::Class>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=MongoDBx::Class>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/MongoDBX::Class>
+L<http://annocpan.org/dist/MongoDBx::Class>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/MongoDBX::Class>
+L<http://cpanratings.perl.org/d/MongoDBx::Class>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/MongoDBX::Class/>
+L<http://search.cpan.org/dist/MongoDBx::Class/>
 
 =back
 

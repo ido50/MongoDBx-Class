@@ -1,15 +1,15 @@
-package MongoDBX::Class;
+package MongoDBx::Class;
 
 # ABSTRACT: Flexible ORM for MongoDB databases
 
 use Moose;
 use namespace::autoclean;
 use MongoDB 0.40;
-use MongoDBX::Class::Connection;
-use MongoDBX::Class::Database;
-use MongoDBX::Class::Collection;
-use MongoDBX::Class::Cursor;
-use MongoDBX::Class::Reference;
+use MongoDBx::Class::Connection;
+use MongoDBx::Class::Database;
+use MongoDBx::Class::Collection;
+use MongoDBx::Class::Cursor;
+use MongoDBx::Class::Reference;
 use Carp;
 
 has 'namespace' => (is => 'ro', isa => 'Str', required => 1);
@@ -20,11 +20,11 @@ has 'doc_classes' => (is => 'ro', isa => 'HashRef', default => sub { {} });
 
 =head1 NAME
 
-MongoDBX::Class - Flexible ORM for MongoDB databases
+MongoDBx::Class - Flexible ORM for MongoDB databases
 
 =head1 SYNOPSIS
 
-	use MongoDBX::Class;
+	use MongoDBx::Class;
 
 =head1 DESCRIPTION
 
@@ -68,7 +68,7 @@ sub connect {
 	$opts{host} ||= 'localhost';
 	$opts{port} ||= 27017;
 
-	$self->_set_conn(MongoDBX::Class::Connection->new(host => $opts{host}, port => $opts{port}, namespace => $self->namespace, doc_classes => $self->doc_classes));
+	$self->_set_conn(MongoDBx::Class::Connection->new(host => $opts{host}, port => $opts{port}, namespace => $self->namespace, doc_classes => $self->doc_classes));
 }
 
 =head1 INTERNAL METHODS
@@ -95,14 +95,14 @@ Ido Perlmuter, C<< <ido at ido50.net> >>
 =head1 BUGS
 
 Please report any bugs or feature requests to C<bug-mongodbx-class at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBX-Class>. I will be notified, and then you'll
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBx-Class>. I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
-	perldoc MongoDBX::Class
+	perldoc MongoDBx::Class
 
 You can also look for information at:
 
@@ -110,19 +110,19 @@ You can also look for information at:
 
 =item * RT: CPAN's request tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=MongoDBX::Class>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=MongoDBx::Class>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/MongoDBX::Class>
+L<http://annocpan.org/dist/MongoDBx::Class>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/MongoDBX::Class>
+L<http://cpanratings.perl.org/d/MongoDBx::Class>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/MongoDBX::Class/>
+L<http://search.cpan.org/dist/MongoDBx::Class/>
 
 =back
 

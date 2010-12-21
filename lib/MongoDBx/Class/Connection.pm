@@ -1,4 +1,4 @@
-package MongoDBX::Class::Connection;
+package MongoDBx::Class::Connection;
 
 # ABSTARCT: A connection to a MongoDB server
 
@@ -9,7 +9,7 @@ extends 'MongoDB::Connection';
 
 =head1 NAME
 
-MongoDBX::Class::Connection - A connection to a MongoDB server
+MongoDBx::Class::Connection - A connection to a MongoDB server
 
 =cut
 
@@ -20,7 +20,7 @@ has 'doc_classes' => (is => 'ro', isa => 'HashRef', required => 1);
 has 'safe' => (is => 'rw', isa => 'Bool', default => 0);
 
 override 'get_database' => sub {
-	MongoDBX::Class::Database->new(_connection => shift, name => shift);
+	MongoDBx::Class::Database->new(_connection => shift, name => shift);
 };
 
 sub expand {
@@ -45,8 +45,8 @@ sub expand {
 	);
 
 	foreach ($dc->meta->get_all_attributes) {
-		# is this a MongoDBX::Class::Reference?
-		if ($_->{isa} eq 'MongoDBX::Class::Reference') {
+		# is this a MongoDBx::Class::Reference?
+		if ($_->{isa} eq 'MongoDBx::Class::Reference') {
 			my $name = $_->name;
 			$name =~ s!^_!!;
 			
@@ -55,12 +55,12 @@ sub expand {
 				    exists $doc->{$name}->{'$ref'} &&
 				    exists $doc->{$name}->{'$id'};
 
-			$attrs{$_->name} = MongoDBX::Class::Reference->new(
+			$attrs{$_->name} = MongoDBx::Class::Reference->new(
 				_collection => $coll,
 				ref_coll => $doc->{$name}->{'$ref'},
 				ref_id => $doc->{$name}->{'$id'},
 			);
-		} elsif ($_->{isa} eq 'ArrayRef[MongoDBX::Class::Reference]') {
+		} elsif ($_->{isa} eq 'ArrayRef[MongoDBx::Class::Reference]') {
 			my $name = $_->name;
 			$name =~ s!^_!!;
 
@@ -68,13 +68,13 @@ sub expand {
 				    ref $doc->{$name} eq 'ARRAY';
 
 			foreach my $ref (@{$doc->{$name}}) {
-				push(@{$attrs{$_->name}}, MongoDBX::Class::Reference->new(
+				push(@{$attrs{$_->name}}, MongoDBx::Class::Reference->new(
 					_collection => $coll,
 					ref_coll => $ref->{'$ref'},
 					ref_id => $ref->{'$id'},
 				));
 			}				
-		} elsif ($_->documentation && $_->documentation eq 'MongoDBX::Class::EmbeddedDocument') {
+		} elsif ($_->documentation && $_->documentation eq 'MongoDBx::Class::EmbeddedDocument') {
 			my $edc_name = $_->{isa};
 			$edc_name =~ s/^${ns}:://;
 			if ($_->{isa} =~ m/^ArrayRef/) {
@@ -109,14 +109,14 @@ Ido Perlmuter, C<< <ido at ido50.net> >>
 =head1 BUGS
 
 Please report any bugs or feature requests to C<bug-mongodbx-class at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBX-Class>. I will be notified, and then you'll
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBx-Class>. I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
-	perldoc MongoDBX::Class::Connection
+	perldoc MongoDBx::Class::Connection
 
 You can also look for information at:
 
@@ -124,19 +124,19 @@ You can also look for information at:
 
 =item * RT: CPAN's request tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=MongoDBX::Class>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=MongoDBx::Class>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/MongoDBX::Class>
+L<http://annocpan.org/dist/MongoDBx::Class>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/MongoDBX::Class>
+L<http://cpanratings.perl.org/d/MongoDBx::Class>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/MongoDBX::Class/>
+L<http://search.cpan.org/dist/MongoDBx::Class/>
 
 =back
 

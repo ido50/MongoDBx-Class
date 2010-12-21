@@ -1,19 +1,19 @@
-package MongoDBX::Class::Document;
+package MongoDBx::Class::Document;
 
-# ABSTRACT: A MongoDBX::Class document role
+# ABSTRACT: A MongoDBx::Class document role
 
 use Moose::Role;
 use namespace::autoclean;
 
 =head1 NAME
 
-MongoDBX::Class::Document - A MongoDBX::Class document role
+MongoDBx::Class::Document - A MongoDBx::Class document role
 
 =cut
 
 has '_id' => (is => 'ro', isa => 'MongoDB::OID', required => 1);
 
-has '_collection' => (is => 'ro', isa => 'MongoDBX::Class::Collection', required => 1);
+has '_collection' => (is => 'ro', isa => 'MongoDBx::Class::Collection', required => 1);
 
 sub id {
 	shift->_id->to_string;
@@ -60,14 +60,14 @@ Ido Perlmuter, C<< <ido at ido50.net> >>
 =head1 BUGS
 
 Please report any bugs or feature requests to C<bug-mongodbx-class at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBX-Class>. I will be notified, and then you'll
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBx-Class>. I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
-	perldoc MongoDBX::Class::Document
+	perldoc MongoDBx::Class::Document
 
 You can also look for information at:
 
@@ -75,19 +75,19 @@ You can also look for information at:
 
 =item * RT: CPAN's request tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=MongoDBX::Class>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=MongoDBx::Class>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/MongoDBX::Class>
+L<http://annocpan.org/dist/MongoDBx::Class>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/MongoDBX::Class>
+L<http://cpanratings.perl.org/d/MongoDBx::Class>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/MongoDBX::Class/>
+L<http://search.cpan.org/dist/MongoDBx::Class/>
 
 =back
 

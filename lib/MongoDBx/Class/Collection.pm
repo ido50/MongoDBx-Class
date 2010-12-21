@@ -1,6 +1,6 @@
-package MongoDBX::Class::Collection;
+package MongoDBx::Class::Collection;
 
-# ABSTRACT: A MongoDBX::Class collection object
+# ABSTRACT: A MongoDBx::Class collection object
 
 use Moose;
 use namespace::autoclean;
@@ -9,7 +9,7 @@ extends 'MongoDB::Collection';
 
 =head1 NAME
 
-MongoDBX::Class::Collection - A MongoDBX::Class collection object
+MongoDBx::Class::Collection - A MongoDBx::Class collection object
 
 =head1 OBJECT METHODS
 
@@ -40,7 +40,7 @@ override 'find' => sub {
 		$q = $query ? $query : {};
 	}
 
-	my $cursor = MongoDBX::Class::Cursor->new(
+	my $cursor = MongoDBx::Class::Cursor->new(
 		_connection => $self->_database->_connection,
 		_ns => $self->full_name, 
 		_query => $q, 
@@ -81,9 +81,9 @@ around 'batch_insert' => sub {
 
 	foreach (@$docs) {
 		foreach my $attr (keys %$_) {
-			if (ref $_->{$attr} && $_->{$attr}->does('MongoDBX::Class::Document')) {
+			if (ref $_->{$attr} && $_->{$attr}->does('MongoDBx::Class::Document')) {
 				$_->{$attr} = { '$ref' => $_->{$attr}->_collection->name, '$id' => $_->{$attr}->_id };
-			} elsif (ref $_->{$attr} && $_->{$attr}->does('MongoDBX::Class::EmbeddedDocument')) {
+			} elsif (ref $_->{$attr} && $_->{$attr}->does('MongoDBx::Class::EmbeddedDocument')) {
 				my $hash = {};
 				foreach my $ha (keys %{$_->{attr}}) {
 					next if $ha eq '_collection';
@@ -118,14 +118,14 @@ Ido Perlmuter, C<< <ido at ido50.net> >>
 =head1 BUGS
 
 Please report any bugs or feature requests to C<bug-mongodbx-class at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBX-Class>. I will be notified, and then you'll
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MongoDBx-Class>. I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
-	perldoc MongoDBX::Class::Collection
+	perldoc MongoDBx::Class::Collection
 
 You can also look for information at:
 
@@ -133,19 +133,19 @@ You can also look for information at:
 
 =item * RT: CPAN's request tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=MongoDBX::Class>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=MongoDBx::Class>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/MongoDBX::Class>
+L<http://annocpan.org/dist/MongoDBx::Class>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/MongoDBX::Class>
+L<http://cpanratings.perl.org/d/MongoDBx::Class>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/MongoDBX::Class/>
+L<http://search.cpan.org/dist/MongoDBx::Class/>
 
 =back
 
