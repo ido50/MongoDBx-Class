@@ -15,6 +15,8 @@ has '_id' => (is => 'ro', isa => 'MongoDB::OID', required => 1);
 
 has '_collection' => (is => 'ro', isa => 'MongoDBx::Class::Collection', required => 1);
 
+has '_class' => (is => 'ro', isa => 'Str', required => 1);
+
 sub id {
 	shift->_id->to_string;
 }
@@ -26,15 +28,27 @@ sub oid {
 sub update {
 	my $self = shift;
 
-	if (scalar @_) {
+	if (scalar @_ && ref $_[0] eq 'HASH') {
+		foreach (keys %{$_[0]}) {
+			$_[0]->{$_} = $self->_connection->collapse($_[0]->{$_});
+		}
 		$self->_collection->update({ _id => $self->_id }, { '$set' => $_[0] }, $_[1]);
 	} else {
 		my $new_doc;
 		foreach (ref($self)->meta->get_all_attributes) {
 			my $name = $_->name;
-			next if $name eq '_collection';
-			$new_doc->{$name} = $self->$name;
+			next if $name eq '_collection' || $name eq '_class';
+
+			my $newval = $self->_connection->collapse($self->$name);
+
+			$name =~ s/^_// if ($_->{isa} eq 'MongoDBx::Class::CoercedReference' ||
+					    $_->{isa} eq 'ArrayOfMongoDBx::Class::CoercedReference' ||
+					    ($_->documentation && $_->documentation eq 'MongoDBx::Class::EmbeddedDocument')
+					   );
+
+			$new_doc->{$name} = $newval;
 		}
+		$new_doc->{_class} = $self->_class;
 		$self->_collection->update({ _id => $self->_id }, $new_doc, $_[1]);
 	}
 }
@@ -51,6 +65,10 @@ sub remove {
 
 sub _database {
 	shift->_collection->_database;
+}
+
+sub _connection {
+	shift->_database->_connection;
 }
 
 =head1 AUTHOR

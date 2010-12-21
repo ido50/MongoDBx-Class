@@ -42,11 +42,12 @@ sub expand {
 
 	my %attrs = (
 		_collection => $coll,
+		_class => $doc->{_class},
 	);
 
 	foreach ($dc->meta->get_all_attributes) {
 		# is this a MongoDBx::Class::Reference?
-		if ($_->{isa} eq 'MongoDBx::Class::Reference') {
+		if ($_->{isa} eq 'MongoDBx::Class::CoercedReference') {
 			my $name = $_->name;
 			$name =~ s!^_!!;
 			
@@ -57,10 +58,11 @@ sub expand {
 
 			$attrs{$_->name} = MongoDBx::Class::Reference->new(
 				_collection => $coll,
+				_class => 'MongoDBx::Class::Reference',
 				ref_coll => $doc->{$name}->{'$ref'},
 				ref_id => $doc->{$name}->{'$id'},
 			);
-		} elsif ($_->{isa} eq 'ArrayRef[MongoDBx::Class::Reference]') {
+		} elsif ($_->{isa} eq 'ArrayOfMongoDBx::Class::CoercedReference') {
 			my $name = $_->name;
 			$name =~ s!^_!!;
 
@@ -70,6 +72,7 @@ sub expand {
 			foreach my $ref (@{$doc->{$name}}) {
 				push(@{$attrs{$_->name}}, MongoDBx::Class::Reference->new(
 					_collection => $coll,
+					_class => 'MongoDBx::Class::Reference',
 					ref_coll => $ref->{'$ref'},
 					ref_id => $ref->{'$id'},
 				));
@@ -100,6 +103,25 @@ sub expand {
 	}
 
 	return $dc->new(%attrs);
+}
+
+sub collapse {
+	my ($self, $val) = @_;
+
+	if (ref $val && $val->isa('MongoDBx::Class::Reference')) {
+		return { '$ref' => $val->ref_coll, '$id' => $val->ref_id };
+	} elsif (ref $val && $val->does('MongoDBx::Class::Document')) {
+		return { '$ref' => $val->_collection->name, '$id' => $val->_id };
+	} elsif (ref $val && $val->does('MongoDBx::Class::EmbeddedDocument')) {
+		my $hash = {};
+		foreach my $ha (keys %$val) {
+			next if $ha eq '_collection';
+			$hash->{$ha} = $val->{$ha};
+		}
+		return $hash;
+	}
+
+	return $val;
 }
 
 =head1 AUTHOR

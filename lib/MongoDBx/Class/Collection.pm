@@ -81,16 +81,7 @@ around 'batch_insert' => sub {
 
 	foreach (@$docs) {
 		foreach my $attr (keys %$_) {
-			if (ref $_->{$attr} && $_->{$attr}->does('MongoDBx::Class::Document')) {
-				$_->{$attr} = { '$ref' => $_->{$attr}->_collection->name, '$id' => $_->{$attr}->_id };
-			} elsif (ref $_->{$attr} && $_->{$attr}->does('MongoDBx::Class::EmbeddedDocument')) {
-				my $hash = {};
-				foreach my $ha (keys %{$_->{attr}}) {
-					next if $ha eq '_collection';
-					$hash->{$ha} = $_->{attr}->{$ha};
-				}
-				$_->{$attr} = $hash;
-			}
+			$_->{$attr} = $self->_database->_connection->collapse($_->{$attr});
 		}
 	}
 

@@ -13,6 +13,8 @@ MongoDBx::Class::EmbeddedDocument - A MongoDBx::Class embedded (sub-)document ro
 
 has '_collection' => (is => 'ro', isa => 'MongoDBx::Class::Collection', required => 1);
 
+has '_class' => (is => 'ro', isa => 'Str', required => 1);
+
 sub _database {
 	shift->_collection->_database;
 }

@@ -65,7 +65,8 @@ Moose::Exporter->setup_import_methods(
 sub belongs_to {
 	my ($meta, $name, %opts) = @_;
 
-	$opts{isa} = 'MongoDBx::Class::Reference';
+	$opts{isa} = 'MongoDBx::Class::CoercedReference';
+	$opts{coerce} = 1;
 
 	$meta->add_attribute('_'.$name => %opts);
 	$meta->add_method($name => sub {
@@ -83,7 +84,8 @@ sub has_one {
 sub has_many {
 	my ($meta, $name, %opts) = @_;
 
-	$opts{isa} = "ArrayRef[MongoDBx::Class::Reference]";
+	$opts{isa} = "ArrayOfMongoDBx::Class::CoercedReference";
+	$opts{coerce} = 1;
 
 	$meta->add_attribute('_'.$name => %opts);
 	$meta->add_method($name => sub {

@@ -3,6 +3,7 @@ package MongoDBx::Class;
 # ABSTRACT: Flexible ORM for MongoDB databases
 
 use Moose;
+use Moose::Util::TypeConstraints;
 use namespace::autoclean;
 use MongoDB 0.40;
 use MongoDBx::Class::Connection;
@@ -11,6 +12,26 @@ use MongoDBx::Class::Collection;
 use MongoDBx::Class::Cursor;
 use MongoDBx::Class::Reference;
 use Carp;
+
+subtype 'MongoDBx::Class::CoercedReference'
+	=> as 'MongoDBx::Class::Reference';
+
+subtype 'ArrayOfMongoDBx::Class::CoercedReference'
+	=> as 'ArrayRef[MongoDBx::Class::Reference]';
+
+coerce 'MongoDBx::Class::CoercedReference'
+	=> from 'Object'
+	=> via { $_->isa('MongoDBx::Class::Reference') ? $_ : MongoDBx::Class::Reference->new(ref_coll => $_->_collection->name, ref_id => $_->_id, _collection => $_->_collection, _class => 'MongoDBx::Class::Reference') };
+
+coerce 'ArrayOfMongoDBx::Class::CoercedReference'
+	=> from 'ArrayRef[Object]'
+	=> via {
+		my @arr;
+		foreach my $i (@$_) {
+			push(@arr, $i->isa('MongoDBx::Class::Reference') ? $i : MongoDBx::Class::Reference->new(ref_coll => $i->_collection->name, ref_id => $i->_id, _collection => $i->_collection, _class => 'MongoDBx::Class::Reference'));
+		}
+		return \@arr;
+	};
 
 has 'namespace' => (is => 'ro', isa => 'Str', required => 1);
 
