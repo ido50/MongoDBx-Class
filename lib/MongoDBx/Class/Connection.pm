@@ -91,6 +91,8 @@ sub expand {
 				next unless exists $doc->{$name} &&
 					    ref $doc->{$name} eq 'ARRAY';
 
+				$attrs{$_->name} = [];
+
 				foreach my $a (@{$doc->{$name}}) {
 					$a->{_class} = $edc_name;
 					push(@{$attrs{$_->name}}, $self->expand($coll_ns, $a));
@@ -104,6 +106,13 @@ sub expand {
 			next unless exists $doc->{$_->name};
 			$attrs{$_->name} = $doc->{$_->name};
 		}
+	}
+
+	if ($attrs{_rules}) {
+		use Data::Dumper;
+		open(FILE, ">asdf.txt");
+		print FILE Dumper($attrs{_rules});
+		close FILE;
 	}
 
 	return $dc->new(%attrs);
