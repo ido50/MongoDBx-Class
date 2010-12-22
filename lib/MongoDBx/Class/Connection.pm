@@ -4,6 +4,7 @@ package MongoDBx::Class::Connection;
 
 use Moose;
 use namespace::autoclean;
+use Scalar::Util qw/blessed/;
 
 extends 'MongoDB::Connection';
 
@@ -111,11 +112,11 @@ sub collapse {
 	if (ref $val eq 'ARRAY') {
 		my @arr;
 		foreach (@$val) {
-			if (ref $_ && $_->isa('MongoDBx::Class::Reference')) {
+			if (blessed $_ && $_->isa('MongoDBx::Class::Reference')) {
 				push(@arr, { '$ref' => $_->ref_coll, '$id' => $_->ref_id });
-			} elsif (ref $_ && $_->does('MongoDBx::Class::Document')) {
+			} elsif (blessed $_ && $_->does('MongoDBx::Class::Document')) {
 				push(@arr, { '$ref' => $_->_collection->name, '$id' => $_->_id });
-			} elsif (ref $_ && $_->does('MongoDBx::Class::EmbeddedDocument')) {
+			} elsif (blessed $_ && $_->does('MongoDBx::Class::EmbeddedDocument')) {
 				my $hash = {};
 				foreach my $ha (keys %$_) {
 					next if $ha eq '_collection';
@@ -127,11 +128,11 @@ sub collapse {
 			}
 		}
 		return \@arr;
-	} elsif (ref $val && $val->isa('MongoDBx::Class::Reference')) {
+	} elsif (blessed $val && $val->isa('MongoDBx::Class::Reference')) {
 		return { '$ref' => $val->ref_coll, '$id' => $val->ref_id };
-	} elsif (ref $val && $val->does('MongoDBx::Class::Document')) {
+	} elsif (blessed $val && $val->does('MongoDBx::Class::Document')) {
 		return { '$ref' => $val->_collection->name, '$id' => $val->_id };
-	} elsif (ref $val && $val->does('MongoDBx::Class::EmbeddedDocument')) {
+	} elsif (blessed $val && $val->does('MongoDBx::Class::EmbeddedDocument')) {
 		my $hash = {};
 		foreach my $ha (keys %$val) {
 			next if $ha eq '_collection';
