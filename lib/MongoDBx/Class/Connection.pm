@@ -84,6 +84,9 @@ sub expand {
 			if ($_->{isa} =~ m/^ArrayRef/) {
 				my $name = $_->name;
 				$name =~ s!^_!!;
+				
+				$edc_name =~ s/^ArrayRef\[//;
+				$edc_name =~ s/\]$//;
 
 				next unless exists $doc->{$name} &&
 					    ref $doc->{$name} eq 'ARRAY';
