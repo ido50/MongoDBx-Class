@@ -33,13 +33,15 @@ sub expand {
 
 	my $coll = $self->get_database($db_name)->get_collection($coll_name);
 
-	return $doc unless exists $doc->{_class} && exists $self->doc_classes->{$doc->{_class}};
+	return $doc unless exists $doc->{_class};
 
 	my $dc_name = $doc->{_class};
 	my $ns = $self->namespace;
 	$dc_name =~ s/^${ns}:://;
 
 	my $dc = $self->doc_classes->{$dc_name};
+
+	next unless $dc;
 
 	my %attrs = (
 		_collection => $coll,
