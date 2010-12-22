@@ -55,6 +55,7 @@ sub expand {
 			$name =~ s!^_!!;
 			
 			next unless exists $doc->{$name} &&
+				    defined $doc->{$name} && 
 				    ref $doc->{$name} eq 'HASH' &&
 				    exists $doc->{$name}->{'$ref'} &&
 				    exists $doc->{$name}->{'$id'};
@@ -70,6 +71,7 @@ sub expand {
 			$name =~ s!^_!!;
 
 			next unless exists $doc->{$name} &&
+				    defined $doc->{$name} && 
 				    ref $doc->{$name} eq 'ARRAY';
 
 			foreach my $ref (@{$doc->{$name}}) {
@@ -91,6 +93,7 @@ sub expand {
 				$edc_name =~ s/\]$//;
 
 				next unless exists $doc->{$name} &&
+					    defined $doc->{$name} && 
 					    ref $doc->{$name} eq 'ARRAY';
 
 				$attrs{$_->name} = [];
@@ -100,12 +103,12 @@ sub expand {
 					push(@{$attrs{$_->name}}, $self->expand($coll_ns, $a));
 				}
 			} else {
-				next unless exists $doc->{$_->name};
+				next unless exists $doc->{$_->name} && defined $doc->{$_->name};
 				$doc->{$_->name}->{_class} = $edc_name;
 				$attrs{$_->name} = $self->expand($coll_ns, $doc->{$_->name});
 			}
 		} else {
-			next unless exists $doc->{$_->name};
+			next unless exists $doc->{$_->name} && defined $doc->{$_->name};
 			$attrs{$_->name} = $doc->{$_->name};
 		}
 	}
