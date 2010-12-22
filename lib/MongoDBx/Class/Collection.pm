@@ -98,7 +98,7 @@ around 'update' => sub {
 	$self->collapse_hash($object) if ref $object eq 'HASH';
 
 	return $self->$orig($query, $object, $opts);
-}
+};
 
 sub collapse_hash {
 	my ($self, $object) = @_;
