@@ -110,13 +110,6 @@ sub expand {
 		}
 	}
 
-	if ($attrs{_rules}) {
-		use Data::Dumper;
-		open(FILE, ">asdf.txt");
-		print FILE Dumper($attrs{_rules});
-		close FILE;
-	}
-
 	return $dc->new(%attrs);
 }
 
