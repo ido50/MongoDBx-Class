@@ -13,6 +13,8 @@ use MongoDBx::Class::Cursor;
 use MongoDBx::Class::Reference;
 use Carp;
 
+# let's set some internal subtypes we can use to automatically coerce
+# objects when expanding documents.
 subtype 'MongoDBx::Class::CoercedReference'
 	=> as 'MongoDBx::Class::Reference';
 
@@ -33,6 +35,7 @@ coerce 'ArrayOfMongoDBx::Class::CoercedReference'
 		return \@arr;
 	};
 
+# class attributes
 has 'namespace' => (is => 'ro', isa => 'Str', required => 1);
 
 has 'conn' => (is => 'ro', isa => 'MongoDB::Connection', predicate => 'is_connected', writer => '_set_conn', clearer => '_clear_conn');
@@ -47,7 +50,144 @@ MongoDBx::Class - Flexible ORM for MongoDB databases
 
 	use MongoDBx::Class;
 
+	# create a new instance of the module and load a model schema
+	my $dbx = MongoDBx::Class->new(namespace => 'MyApp::Model::DB');
+
+	# connect to a MongoDB server
+	my $conn = $dbx->connect(host => 'localhost', port => 27017);
+
+	# get a MongoDB database
+	my $db = $conn->get_database('people');
+
+	# insert a person
+	my $person = $db->insert({ name => 'Some Guy', birth_date => '1984-06-12', _class => 'Person' });
+
+	print "Created person ".$person->name." (".$person->id.")\n";
+
+	$person->update({ name => 'Some Smart Guy' });
+
+	$person->delete;
+
 =head1 DESCRIPTION
+
+L<MongoDBx::Class> is a flexible object relational mapper (ORM) for
+L<MongoDB> databases. Given a schema-like collection of document classes,
+MongoDBx::Class expands MongoDB objects (hash-refs in Perl) from the
+database into objects of those document classes, and collapses such objects
+back to the database.
+
+MongoDBx::Class takes advantage of the fact that Perl's L<MongoDB> driver
+is L<Moose>-based to extend and tweak the driver's behavior, instead of
+wrapping it. This means MongoDBx::Class does not define its own syntax,
+so you simply use it exactly as you would the L<MongoDB> driver directly.
+That said, MongoDBx::Class adds some sugar that enhances and simplifies
+the syntax unobtrusively (either use it or don't). Thus, it is relatively
+easy to convert your current L<MongoDB> applications to MongoDBx::Class.
+A collection in MongoDBx::Class C<isa('MongoDB::Collection')>, a database
+in MongoDBx::Class C<isa('MongoDB::Database')>, etc.
+
+As opposed to other ORMs (even non-MongoDB ones), MongoDBx::Class attempts
+to stay as close as possible to MongoDB's non-schematic nature. While most
+ORMs enforce using a single collection (or table in the SQL world) for
+every object class, MongoDBx::Class allows you to store documents of
+different classes in different collections (and even databases). A collection
+can hold documents of many different classes. Not only that, as MongoDBx::Class
+is Moose based, you can easily create very flexible schemas by using
+concepts such as inheritance and L<roles|Moose::Role>. For example, say
+you have a collection called 'people' with documents representing, well,
+people, but these people can either be teachers or students. Also, students
+may assume the role "hall monitor". With MongoDBx::Class, you can create
+a common base class, say "People", and two more classes that extend it - 
+"Teacher" and "Student" with attributes that are only relevant to themselves.
+You also create a role called "HallMonitor", possibly with some methods
+of its own. You can save all these "people documents" into a single
+MongoDB collection, and when fetching documents from that collection,
+they will be properly expanded to their correct classes (though you will
+have to apply roles yourself - at least for now).
+
+=head2 COMPARISON WITH OTHER MongoDB ORMs
+
+As MongoDB is rather young, there aren't many options out there, though
+CPAN has some pretty good options, and will probably have more as MongoDB
+popularity rises.
+
+The first MongoDB ORM in CPAN was L<Mongoose>, and while it's a very good
+ORM, MongoDBx::Class was mainly written to overcome some limitations of
+Mongoose. The biggest of these limitations is that in order to provide a
+more comfortable syntax than MongoDB's native syntax, Mongoose makes the
+unfortunate decision of being implemented as a L<singleton|MooseX::Singleton>,
+meaning only one instance of a Mongoose-based schema can be used in an
+application. That essentially kills multithreaded applications. Say you
+have a L<Plack>-based (doesn't have to be Plack-based though) web application
+deployed via L<Starman> (or any other web server for that matter), which
+is a pre-forking web server, you're pretty much doomed. As
+<MongoDB's driver|MongoDB::Connection/"Multithreading"> states, it doesn't
+support connection pooling, so every fork has to have its own connection
+to the MongoDB server. Mongoose being a singleton means your threads will
+not have a connection to the server, and you're screwed. MongoDBx::Class
+does not suffer this limitation. You can start as many connections as you
+want. If you're running in a pre-forking environment, you don't have to
+worry about it at all.
+
+Other differences from Mongoose include:
+
+=over
+
+=item * Mongoose creates its own syntax, MongoDBx::Class doesn't, you
+use L<MongoDB>'s syntax directly.
+
+=item * A document class in Mongoose is connected to a single collection
+only, and a collection can only have documents of that class. MongoDBx::Class
+doesn't have that limitation. Do what you like.
+
+=item * Mongoose has limited support for multiple database connections.
+With MongoDBx::Class, you can connect to as many databases as you want.
+
+=item * MongoDBx::Class is way faster. While I haven't performed any real
+benchmarks, an application converted from Mongoose to MongoDBx::Class
+showed an increase of speed in orders of magnitude.
+
+=back
+
+Another ORM for MongoDB is L<Mongrel>, which doesn't use Moose and thus is
+lighter (though as L<MongoDB> is already Moose-based, I see no benefit here).
+It uses L<Oogly> for data validation (while Moose has its own type validation),
+and seems to define its own syntax as well. Unfortunately, documentation
+is currently lacking, and I haven't given it a try, so I can't draw
+specific comparisons here.
+
+Even before Mongoose was born, you could use MongoDB as a backend for
+L<KiokuDB>, by using L<KiokuDB-Backend-MongoDB>. However, KiokuDB is
+considered a database of its own, and thus this isn't really an ORM
+for MongoDB. L<Mongoose::Intro|Mongoose::Intro/"Why not use KiokuDB?">
+already gives a pretty convincing case why and when you shouldn't or
+should want to use KiokuDB.
+
+=head2 CAVEATS
+
+There are two main caveats for using MongoDBx::Class as of today:
+
+=over
+
+=item * It's alpha software. This is the first release, and bugs are found
+(and fixed) all the time. Don't rely on it for production use yet. You have
+been warned.
+
+=item * MongoDBx::Class's flexibility is dependant on its ability to recognise
+which class a document in a MongoDB collection expands to. Currently,
+MongoDBx::Class requires every document to have an attribute called "_class"
+that contains the name of the document class to use. This isn't very
+comfortable, but works. I'm still thinking of ways to expand documents
+without this. This pretty much means that you will have to perform
+some preparations to use existing MongoDB database with MongoDBx::Class - 
+you will have to update every document in the database with the "_class"
+attribute.
+
+=back
+
+=head2 TUTORIAL
+
+To start using MongoDBx::Class, please read L<MongoDBx::Class::Tutorial>.
 
 =head1 CLASS METHODS
 
@@ -55,7 +195,7 @@ MongoDBx::Class - Flexible ORM for MongoDB databases
 
 Creates a new instance of this module. Requires the namespace of the
 database schema to use. The schema will be immediately loaded, but no
-connection to a database is made yet.
+connection to a MongoDB server is made yet.
 
 =cut
 
@@ -68,18 +208,28 @@ sub BUILD {
 =head2 namespace
 
 A string representing the namespace of the MongoDB schema used (e.g.
-C<MyApp::Schema>. Your document classes, structurally speaking, should be
+C<MyApp::Schema>). Your document classes, structurally speaking, should be
 descendants of this namespace (e.g. C<MyApp::Schema::Article>,
 C<MyApp::Schema::Post>).
+
+=head2 conn
+
+The object's connection to a MongoDB server. This is a L<MongoDBx::Class::Connection>
+object (which extends L<MongoDB::Connection>). This is set only after the
+C<connect()> method is called.
+
+=head2 doc_classes
+
+A hash-ref of document classes found when loading the schema.
 
 =head1 OBJECT METHODS
 
 =head2 connect( [host => $host], [port => $port] )
 
 Initiates a new connection to a MongoDB server running on a certain host
-and listening to a certain port, and sets the working database. If a host
-is not provided, 'localhost' is used. If a port is not provided, 27017
-(MongoDB's default port) is used. The database name is required.
+and listening to a certain port. If a host is not provided, 'localhost'
+is used. If a port is not provided, 27017 (MongoDB's default port) is
+used. The database name is required.
 
 =cut
 
@@ -93,6 +243,13 @@ sub connect {
 }
 
 =head1 INTERNAL METHODS
+
+The following methods are only to be used internally by MongoDBx::Class.
+
+=head2 _load_schema()
+
+Loads the schema and saves a hash-ref of document classes found in the object.
+Automatic loading courtesy of L<Module::Pluggable>.
 
 =cut
 
