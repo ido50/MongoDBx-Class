@@ -92,6 +92,27 @@ around 'batch_insert' => sub {
 	}
 };
 
+around 'update' => sub {
+	my ($orig, $self, $query, $object, $opts) = @_;
+
+	$self->collapse_hash($object) if ref $object eq 'HASH';
+
+	return $self->$orig($query, $object, $opts);
+}
+
+sub collapse_hash {
+	my ($self, $object) = @_;
+
+	foreach (keys %$object) {
+		if (m/^\$/ && ref $object->{$_} eq 'HASH') {
+			# this is something like '$set', we need to collapse the values in it
+			$object->{$_} = $self->collapse_hash($object->{$_});
+		} else {
+			$object->{$_} = $self->_database->_connection->collapse($object->{$_});
+		}
+	}
+}
+
 around 'ensure_index' => sub {
 	my ($orig, $self, $keys, $options) = @_;
 

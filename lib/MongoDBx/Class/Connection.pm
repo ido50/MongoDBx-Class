@@ -108,7 +108,26 @@ sub expand {
 sub collapse {
 	my ($self, $val) = @_;
 
-	if (ref $val && $val->isa('MongoDBx::Class::Reference')) {
+	if (ref $val eq 'ARRAY') {
+		my @arr;
+		foreach (@$val) {
+			if (ref $_ && $_->isa('MongoDBx::Class::Reference')) {
+				push(@arr, { '$ref' => $_->ref_coll, '$id' => $_->ref_id });
+			} elsif (ref $_ && $_->does('MongoDBx::Class::Document')) {
+				push(@arr, { '$ref' => $_->_collection->name, '$id' => $_->_id });
+			} elsif (ref $_ && $_->does('MongoDBx::Class::EmbeddedDocument')) {
+				my $hash = {};
+				foreach my $ha (keys %$_) {
+					next if $ha eq '_collection';
+					$hash->{$ha} = $_->{$ha};
+				}
+				push(@arr, $hash);
+			} else {
+				push(@arr, $_);
+			}
+		}
+		return \@arr;
+	} elsif (ref $val && $val->isa('MongoDBx::Class::Reference')) {
 		return { '$ref' => $val->ref_coll, '$id' => $val->ref_id };
 	} elsif (ref $val && $val->does('MongoDBx::Class::Document')) {
 		return { '$ref' => $val->_collection->name, '$id' => $val->_id };
