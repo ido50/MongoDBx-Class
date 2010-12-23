@@ -4,6 +4,7 @@ package MongoDBx::Class::Collection;
 
 use Moose;
 use namespace::autoclean;
+use Carp;
 
 extends 'MongoDB::Collection';
 
@@ -23,6 +24,9 @@ MongoDBx::Class::Collection - A MongoDBx::Class collection object
 
 override 'find' => sub {
 	my ($self, $query, $attrs) = @_;
+
+	croak 'Query must be a hash reference (received '.ref($query).')'
+		if $query && ref $query ne 'HASH';
 
 	# old school options - these should be set with MongoDB::Cursor methods
 	my ($limit, $skip, $sort_by) = @{ $attrs || {} }{qw/limit skip sort_by/};
@@ -80,6 +84,8 @@ around 'batch_insert' => sub {
 	$opts->{safe} = 1 if $self->_database->_connection->safe && !defined $opts->{safe};
 
 	foreach (@$docs) {
+		croak 'Document to insert must be a hash reference (received '.ref($_).')'
+			unless ref $_ eq 'HASH';
 		foreach my $attr (keys %$_) {
 			$_->{$attr} = $self->_database->_connection->collapse($_->{$attr});
 		}
