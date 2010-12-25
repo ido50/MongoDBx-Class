@@ -1,6 +1,8 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+
+0.2       2010-12-25 23:13:25 Asia/Jerusalem
 	- Fixed bug preventing tests from loading the test schema
 
 0.1       2010-12-25 20:40:15 Asia/Jerusalem
