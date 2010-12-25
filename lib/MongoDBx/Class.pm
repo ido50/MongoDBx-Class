@@ -207,7 +207,7 @@ It also contains a list of frequently asked questions.
 
 =head1 CLASS METHODS
 
-=head1 new( namespace => $namespace )
+=head2 new( namespace => $namespace )
 
 Creates a new instance of this module. Requires the namespace of the
 database schema to use. The schema will be immediately loaded, but no
