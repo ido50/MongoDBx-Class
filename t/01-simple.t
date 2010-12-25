@@ -1,6 +1,6 @@
 #!perl -T
 
-use lib './t/';
+use lib 't/lib';
 use strict;
 use warnings;
 use Test::More tests => 12;
