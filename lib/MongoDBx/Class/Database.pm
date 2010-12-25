@@ -11,6 +11,30 @@ extends 'MongoDB::Database';
 
 MongoDBx::Class::Database - A MongoDBx::Class database object
 
+=head1 EXTENDS
+
+L<MongoDB::Database>
+
+=head1 SYNOPSIS
+
+	# get a database object from your connection object
+	my $db = $conn->get_database($db_name); # or simply $conn->$db_name
+
+=head1 DESCRIPTION
+
+MongoDBx::Class::Database extends L<MongoDB::Database>. All it actually
+does is override the C<get_collection> method such that it returns a
+L<MongoDBx::Class::Collection> object instead of a L<MongoDB::Collection>
+object.
+
+=head1 ATTRIBUTES
+
+No special attributes are added.
+
+=head1 OBJECT METHODS
+
+Only the C<get_collection> method is modified as described above.
+
 =cut
 
 override 'get_collection' => sub {
@@ -55,7 +79,9 @@ L<http://search.cpan.org/dist/MongoDBx::Class/>
 
 =back
 
-=head1 ACKNOWLEDGEMENTS
+=head1 SEE ALSO
+
+L<MongoDBx::Class::Connection>, L<MongoDB::Database>.
 
 =head1 LICENSE AND COPYRIGHT
 

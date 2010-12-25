@@ -12,7 +12,38 @@ extends 'MongoDB::Collection';
 
 MongoDBx::Class::Collection - A MongoDBx::Class collection object
 
+=head1 EXTENDS
+
+L<MongoDB::Collection>
+
+=head1 SYNOPSIS
+
+	# get a collection from a L<MongoDBx::Class::Database> object
+	my $coll = $db->get_collection($coll_name); # or $db->$coll_name
+
+	# insert a document
+	my $doc = $db->insert({ title => 'The Valley of Fear', year => 1914, author => 'Conan Doyle', _class => 'Novel' }, { safe => 1 });
+
+	# find some documents
+	my @docs = $db->find({ author => 'Conan Doyle' })->sort({ year => 1 })->all;
+
+=head1 DESCRIPTION
+
+MongoDBx::Class::Collection extends L<MongoDB::Collection>. It adds some
+convenient options to the syntax and a few method modifications to allow
+automatic document expansion (when finding) and collapsing (when inserting).
+
+If you're not familiar with L<MongoDB::Collection>, please read it first.
+
+=head1 ATTRIBUTES
+
+No special attributes are added.
+
 =head1 OBJECT METHODS
+
+The following methods are available along with all methods defined in
+L<MongoDB::Collection>. However, most (or all) of those, are modifications
+of MongoDB::Collection methods.
 
 =head2 find( \%query, [ \%attrs ] )
 
@@ -20,13 +51,27 @@ MongoDBx::Class::Collection - A MongoDBx::Class collection object
 
 =head2 search( \%query, [ \%attrs ] )
 
+All three methods are equivalent (the last two aliases of the first).
+These methods perform a search for documents in the collection that match
+a certain query and return a L<MongoDBx::Class::Cursor> object. Refer to
+L<MongoDB::Collection/"find($query)"> for more information about queries.
+
+These methods are modified in the following way:
+
+1. They return a L<MongoDBx::Class::Cursor> object instead of a plain
+L<MongoDB::Cursor> object.
+
+2. The C<sort_by> attribute in the C<$attr> hash-ref can contain an
+array-ref instead of a L<Tie::IxHash> object, such as:
+
+	$coll->find({ some => 'thing' }, { sort_by => [ title => 1, some => -1 ] })
+
+This array-ref will be converted into a Tie::IxHash object automatically.
+
 =cut
 
 override 'find' => sub {
 	my ($self, $query, $attrs) = @_;
-
-	croak 'Query must be a hash reference (received '.ref($query).')'
-		if $query && ref $query ne 'HASH';
 
 	# old school options - these should be set with MongoDB::Cursor methods
 	my ($limit, $skip, $sort_by) = @{ $attrs || {} }{qw/limit skip sort_by/};
@@ -61,6 +106,31 @@ sub search {
 	shift->find(@_);
 }
 
+=head2 find_one( $query, [ \%fields ] )
+
+Performs a query on the collection and returns the first matching document.
+
+This method is modified in the following way:
+
+1. In L<MongoDB::Collection>, C<$query> can either be a hash-ref, a
+L<Tie::IxHash> object or an array-ref. Here, however, C<$query> can also
+be a MongoDB::OID, or a MongoDB::OID's string representation (see L<MongoDB::OID/"to_string">).
+Searching by internal ID is thus much more convenient:
+
+	my $doc = $coll->find_one("4cbca90d3a41e35916720100");
+
+2. The matching document is automatically expanded to the appropriate
+document class, but only if it has the _class attribute (as described
+in L<MongoDBx::Class/"CAVEATS AND THINGS TO CONSIDER">). If it doesn't, or if expansion is
+impossible due to other reasons, it will be returned as is (i.e. as a
+hash-ref).
+
+3. In MongoDB::Collection, passing a C<\%fields> hash-ref will result in
+the document being returned with those fields only (and the _id field).
+Behaviour of this when documents are expanded is currently undefined.
+
+=cut
+
 around 'find_one' => sub {
 	my ($orig, $self, $orig_query, $fields) = @_;
 
@@ -70,12 +140,45 @@ around 'find_one' => sub {
 		$query->{_id} = MongoDB::OID->new(value => $orig_query);
 	} elsif ($orig_query && ref $orig_query eq 'MongoDB::OID') {
 		$query->{_id} = $orig_query;
-	} else {
+	} elsif ($orig_query) {
 		$query = $orig_query;
 	}
 
 	return $self->$orig($query, $fields);
 };
+
+=head2 insert( \%doc, [ \%opts ] )
+
+Inserts the given document into the database. As opposed to the original
+insert method in L<MongoDB::Collection>, this method only accepts a hash-ref
+as the document to insert, and will C<croak> otherwise.
+
+An optional options hash-ref can be passed. If this hash-ref holds a safe
+key with a true value, insert will be safe (refer to L<MongoDB::Collection/"insert ($object, $options?)">
+for more information). When performing a safe insert, the newly created
+document is returned (after expansions). If unsafe, its L<MongoDB::OID>
+is returned.
+
+If your L<connection object|MongoDBx::Class::Connection> has a true value
+for the safe attribute, insert will be safe by default. If that is the case,
+and you want the specific insert to be unsafe, pass a false value for
+C<safe> in the C<\%opts> hash-ref.
+
+=head2 batch_insert( \@docs, [ \%opts ] )
+
+Receives an array-ref of documents and an optional hash-ref of options,
+and inserts all the documents to the collection one after another. C<\%opts>
+can have a "safe" key that should hold a boolean value. If true (and if
+your L<connection object|MongoDB::Connection> has a true value for the
+safe attribute), inserts will be safe, and an array of all the documents
+inserted (after expansion) will be returned. If false, an array with all
+the document IDs is returned.
+
+Documents to insert must be hash references. If one (or more) documents
+are not, this method will croak. No documents will be inserted even if
+just one is not a hash-ref and the rest are.
+
+=cut
 
 around 'batch_insert' => sub {
 	my ($orig, $self, $docs, $opts) = @_;
@@ -86,6 +189,9 @@ around 'batch_insert' => sub {
 	foreach (@$docs) {
 		croak 'Document to insert must be a hash reference (received '.ref($_).')'
 			unless ref $_ eq 'HASH';
+	}
+
+	foreach (@$docs) {
 		foreach my $attr (keys %$_) {
 			$_->{$attr} = $self->_database->_connection->collapse($_->{$attr});
 		}
@@ -98,26 +204,43 @@ around 'batch_insert' => sub {
 	}
 };
 
+=head2 update( \%criteria, \%object, [ \%options ] )
+
+Searches for documents matching C<\%criteria> and updates them according
+to C<\%object> (refer to L<MongoDB::Collection/"update (\%criteria, \%object, \%options?)">
+for more info). As opposed to the original method, this method will
+automatically collapse the C<\%object> hash-ref. It will croak if criteria
+and/or object aren't hash references.
+
+Do not use this method to update a specific document that you already
+have (i.e. after expansion). L<MongoDBx::Class::Document> has its own
+update method which is more convenient.
+
+=cut
+
 around 'update' => sub {
-	my ($orig, $self, $query, $object, $opts) = @_;
+	my ($orig, $self, $criteria, $object, $opts) = @_;
 
-	$self->collapse_hash($object) if ref $object eq 'HASH';
+	croak 'Criteria for update must be a hash reference (received '.ref($criteria).').'
+		unless ref $criteria eq 'HASH';
 
-	return $self->$orig($query, $object, $opts);
+	croak 'Object for update must be a hash reference (received '.ref($object).').'
+		unless ref $object eq 'HASH';
+
+	$self->_collapse_hash($criteria);
+
+	return $self->$orig($criteria, $object, $opts);
 };
 
-sub collapse_hash {
-	my ($self, $object) = @_;
+=head2 ensure_index( $keys, [ \%options ] )
 
-	foreach (keys %$object) {
-		if (m/^\$/ && ref $object->{$_} eq 'HASH') {
-			# this is something like '$set', we need to collapse the values in it
-			$object->{$_} = $self->collapse_hash($object->{$_});
-		} else {
-			$object->{$_} = $self->_database->_connection->collapse($object->{$_});
-		}
-	}
-}
+Makes sure the given keys of this collection are indexed. Keys is either
+an unordered hash-ref, an ordered L<Tie::IxHash> object, or an order
+array refernce like this:
+
+	$coll->ensure_index([ title => 1, date => -1 ])
+
+=cut
 
 around 'ensure_index' => sub {
 	my ($orig, $self, $keys, $options) = @_;
@@ -128,6 +251,27 @@ around 'ensure_index' => sub {
 
 	return $self->$orig($keys, $options);
 };
+
+=head1 INTERNAL METHODS
+
+=head2 _collapse_hash( \%object )
+
+Collapses an entier hash-ref for proper database insertions.
+
+=cut
+
+sub _collapse_hash {
+	my ($self, $object) = @_;
+
+	foreach (keys %$object) {
+		if (m/^\$/ && ref $object->{$_} eq 'HASH') {
+			# this is something like '$set', we need to collapse the values in it
+			$object->{$_} = $self->_collapse_hash($object->{$_});
+		} else {
+			$object->{$_} = $self->_database->_connection->collapse($object->{$_});
+		}
+	}
+}
 
 =head1 AUTHOR
 
@@ -167,7 +311,9 @@ L<http://search.cpan.org/dist/MongoDBx::Class/>
 
 =back
 
-=head1 ACKNOWLEDGEMENTS
+=head1 SEE ALSO
+
+L<MongoDB::Collection>.
 
 =head1 LICENSE AND COPYRIGHT
 

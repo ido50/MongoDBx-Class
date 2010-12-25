@@ -11,6 +11,40 @@ extends 'MongoDB::Cursor';
 
 MongoDBx::Class::Cursor - A MongoDBx::Class cursor/iterator object for query results
 
+=head1 EXTENDS
+
+L<MongoDB::Cursor>
+
+=head1 SYNOPSIS
+
+	my $cursor = $coll->find({ author => 'Conan Doyle' });
+
+	print "Novels by Arthur Conan Doyle:\n";
+
+	foreach ($cursor->sort({ year => 1 })->all) {
+		print $_->title, '( ', $_->year, ")\n";
+	}
+
+=head1 DESCRIPTION
+
+MongoDBx::Class::Cursor extends L<MongoDB::Cursor>. At its basis, it
+adds automatic document expansion when traversing cursor results.
+
+=head1 ATTRIBUTES
+
+No special attributes are added.
+
+=head1 OBJECT METHODS
+
+Aside from methods provided by L<MonogDB::Cursor>, the following method
+modifications are performed:
+
+=head2 next()
+
+Returns the next document in the cursor, if any. Automatically expands that
+document to the appropriate class (if _class attribute exists, otherwise
+document is returned as is).
+
 =cut
 
 around 'next' => sub {
@@ -20,6 +54,16 @@ around 'next' => sub {
 
 	return $self->_connection->expand($self->_ns, $doc);
 };
+
+=head2 sort( $rules )
+
+Adds a sort to the cursor and returns the cursor itself for chaining.
+C<$rules> can either be an unordered hash-ref, and ordered L<Tie::IxHash>
+object, or an array reference such as this:
+
+	$cursor->sort([ date => -1, time => -1, subject => 1 ])
+
+=cut
 
 around 'sort' => sub {
 	my ($orig, $self, $rules) = @_;
@@ -69,7 +113,9 @@ L<http://search.cpan.org/dist/MongoDBx::Class/>
 
 =back
 
-=head1 ACKNOWLEDGEMENTS
+=head1 SEE ALSO
+
+L<MongoDBx::Class::Collection>, L<MongoDB::Cursor>.
 
 =head1 LICENSE AND COPYRIGHT
 

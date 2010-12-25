@@ -12,6 +12,49 @@ extends 'MongoDB::Connection';
 
 MongoDBx::Class::Connection - A connection to a MongoDB server
 
+=head1 EXTENDS
+
+L<MongoDB::Connection>
+
+=head1 SYNOPSIS
+
+	# connect to a MongoDB server
+	$mongodbx->connect(host => '10.10.10.10', port => 27017);
+
+	# the connection object is automatically saved to the 'conn'
+	# attribute of the L<MongoDBx::Class> object (C<$mongodbx> above)
+
+	$mongodbx->conn->get_database('people');
+
+=head1 DESCRIPTION
+
+MongoDBx::Class::Connection extends L<MongoDB::Connection>. This class
+provides the document expansion and collapsing methods that are used
+internally by other MongoDBx::Class classes.
+
+Note that a L<MongoDBx::Class> object can only have one connection at a
+time. Connection is only made via the C<connect()> method in MongoDBx::Class.
+
+=head1 ATTRIBUTES
+
+Aside for attributes provided by L<MongoDB::Connection>, the following
+special attributes are added:
+
+=head2 namespace
+
+A string representing the namespace of document classes to load (e.g.
+MyApp::Schema). This is a required attribute.
+
+=head2 doc_classes
+
+A hash-ref of document classes loaded. This is a required attribute.
+
+=head2 safe
+
+A boolean value indicating whether to use safe operations (e.g. inserts
+and updates) by default - without the need to pass C<<{ safe => 1 }>> to
+relevant methods - or not. False by default.
+
 =cut
 
 has 'namespace' => (is => 'ro', isa => 'Str', required => 1);
@@ -20,9 +63,38 @@ has 'doc_classes' => (is => 'ro', isa => 'HashRef', required => 1);
 
 has 'safe' => (is => 'rw', isa => 'Bool', default => 0);
 
+=head1 OBJECT METHODS
+
+Aside from the methods provided by L<MongoDB::Connection>, the following
+methods and modifications are added:
+
+=head2 get_database( $name )
+
+Returns a L<MongoDBx::Class::Database> object representing the MongoDB
+database named C<$name>.
+
+=cut
+
 override 'get_database' => sub {
 	MongoDBx::Class::Database->new(_connection => shift, name => shift);
 };
+
+=head2 safe( $boolean )
+
+Overrides the current value of the safe attribute with a new boolean value.
+
+=head2 expand( $coll_ns, \%doc )
+
+Returns the full name (a.k.a namespace) of a collection (that is the database
+name, followed by a dot, and the collection name), and a document hash-ref,
+and attempts to expand it according to the _class attribute that should
+exists in the document. If it doesn't exist, the document is returned as
+is.
+
+This is mostly used internally and you don't have to worry about expansion,
+it's done automatically.
+
+=cut
 
 sub expand {
 	my ($self, $coll_ns, $doc) = @_;
@@ -41,7 +113,7 @@ sub expand {
 
 	my $dc = $self->doc_classes->{$dc_name};
 
-	next unless $dc;
+	return $doc unless $dc;
 
 	my %attrs = (
 		_collection => $coll,
@@ -115,6 +187,18 @@ sub expand {
 
 	return $dc->new(%attrs);
 }
+
+=head2 collapse( $val )
+
+Receives a value for a document attribute and returns it after collapsion
+so that it can be safely inserted to the database. For example, you can't
+save an embedded document directly to the database, you need to convert
+it to a hash-ref first.
+
+This method is mostly used internally and you don't have to worry about
+collapsing, it's done automatically.
+
+=cut
 
 sub collapse {
 	my ($self, $val) = @_;
@@ -192,7 +276,9 @@ L<http://search.cpan.org/dist/MongoDBx::Class/>
 
 =back
 
-=head1 ACKNOWLEDGEMENTS
+=head1 SEE ALSO
+
+L<MongoDBx::Class>, L<MongoDB::Connection>.
 
 =head1 LICENSE AND COPYRIGHT
 

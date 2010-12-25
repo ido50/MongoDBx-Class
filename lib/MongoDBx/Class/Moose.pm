@@ -9,51 +9,56 @@ use Moose::Exporter;
 
 MongoDBx::Class::Moose - Extends Moose with common relationships for MongoDBx::Class documents
 
-=head1 RELATIONSHIPS
+=head1 PROVIDES
 
-=head2 belongs_to
+L<Moose>
 
-Specifies that the document has an attribute which references another,
-supposedly parent, document. The reference is in the form documented by
-L<MongoDBx::Class::Reference>.
+=head1 SYNOPSIS
 
-=head2 has_one
+	# create a document class
+	package MyApp::Schema::Novel;
 
-Specifies that the document has an attribute which references another
-document. The reference is in the form documented by L<MongoDBx::Class::Reference>.
-This is entirely equivalent to L</belongs_to>, the two are provided merely
-for convenience.
+	use MongoDBx::Class::Moose; # use this instead of Moose;
+	use namespace::autoclean;
 
-=head2 has_many
+	with 'MongoDBx::Class::Document';
 
-Specifies that the document has an attribute which holds a list (array)
-of references to other documents. These references are in the form
-documented by L<MongoDBx::Class::Reference>. 
+	has 'title' => (is => 'ro', isa => 'Str', required => 1, writer => 'set_title');
 
-=head2 holds_one
+	holds_one 'author' => (is => 'ro', isa => 'PersonName', required => 1, writer => 'set_author');
 
-Specifies that the document has an attribute which holds an embedded
-document (a.k.a sub-document) in its entirety. The embedded document
-is represented by a class that C<does> L<MongoDBx::Class::EmbeddedDocument>.
+	has 'year' => (is => 'ro', isa => 'Int', predicate => 'has_year', writer => 'set_year');
 
-=head2 holds_many
+	has_many 'related_novels' => (is => 'ro', isa => 'Novel', predicate => 'has_related_novels', writer => 'set_related_novels', clearer => 'clear_related_novels');
 
-Specifies that the document has an attribute which holds a list (array)
-of embedded documents (a.k.a sub-documents) in their entirety. These
-embedded documents are represented by a class that C<does>
-L<MongoDBx::Class::EmbeddedDocument>.
+	joins_many 'reviews' => (is => 'ro', isa => 'Review', coll => 'reviews', ref => 'novel');
 
-=head2 joins_one
+	sub print_related_novels {
+		my $self = shift;
 
-Specifies that the document is referenced by one other document. The reference
-in the other document to this document is in the form documented by
-L<MongoDBx::Class::Reference>.
+		foreach my $other_novel ($self->related_novels) {
+			print $other_novel->title, ', ',
+			      $other_novel->year, ', ',
+			      $other_novel->author->name, "\n";
+		}
+	}
 
-=head2 joins_many
+	around 'reviews' => sub {
+		my ($orig, $self) = (shift, shift);
 
-Specifies that the document is referenced by other documents. The references
-in the other document to this document are in the form documented by
-L<MongoDBx::Class::Reference>.
+		my $cursor = $self->$orig;
+		
+		return $cursor->sort([ year => -1, title => 1, 'author.last_name' => 1 ]);
+	};
+
+	__PACKAGE__->meta->make_immutable;
+
+=head1 DESCRIPTION
+
+This module provides some relationship types (i.e. database references)
+for L<MongoDB documents|MongoDBx::Class::Document> and L<embedded documents|MongoDBx::Class::EmbeddedDocument>,
+in the form of L<Moose> attributes. It also provides everything Moose
+provides, and so is to replace C<use Moose> when creating document classes.
 
 =cut
 
@@ -61,6 +66,32 @@ Moose::Exporter->setup_import_methods(
 	with_meta => [ 'belongs_to', 'has_one', 'has_many', 'holds_one', 'holds_many', 'joins_one', 'joins_many' ],
 	also      => 'Moose',
 );
+
+=head1 RELATIONSHIP TYPES
+
+This module provides the following relationship types. The differences
+between different relationships stem from the different ways in which
+references can be represented in the database.
+
+=head2 belongs_to
+
+Specifies that the document has an attribute which references another,
+supposedly parent, document. The reference is in the form documented by
+L<MongoDBx::Class::Reference>.
+
+	belongs_to 'parent' => (is => 'ro', isa => 'Article', required => 1)
+
+In the database, this relationship is represented in the referencing
+document like this:
+
+	{ ... parent => { '$ref' => 'coll_name', '$id' => $mongo_oid } ... }
+
+Calling C<parent()> on the referencing document returns the parent
+document after expansion:
+
+	$doc->parent->title;
+
+=cut
 
 sub belongs_to {
 	my ($meta, $name, %opts) = @_;
@@ -77,9 +108,40 @@ sub belongs_to {
 	});
 }
 
+=head2 has_one
+
+Specifies that the document has an attribute which references another
+document. The reference is in the form documented by L<MongoDBx::Class::Reference>.
+This is entirely equivalent to L</belongs_to>, the two are provided merely
+for convenience.
+
+=cut
+
 sub has_one {
 	belongs_to(@_);
 }
+
+=head2 has_many
+
+Specifies that the document has an attribute which holds a list (array)
+of references to other documents. These references are in the form
+documented by L<MongoDBx::Class::Reference>.
+
+	has_many 'related_articles' => (is => 'ro', isa => 'Article', predicate => 'has_related_articles')
+
+In the database, this relationship is represented in the referencing
+document like this:
+
+	{ ... related_articles => [{ '$ref' => 'coll_name', '$id' => $mongo_oid_1 }, { '$ref' => 'other_coll_name', '$id' => $mongo_oid_2 }] ... }
+
+Calling C<related_articles()> on the referencing document returns an array
+of all references documents, after expansion:
+
+	foreach ($doc->related_articles) {
+		print $_->title, "\n";
+	}
+
+=cut
 
 sub has_many {
 	my ($meta, $name, %opts) = @_;
@@ -101,6 +163,31 @@ sub has_many {
 	});
 }
 
+=head2 holds_one
+
+Specifies that the document has an attribute which holds an embedded
+document (a.k.a sub-document) in its entirety. The embedded document
+is represented by a class that C<does> L<MongoDBx::Class::EmbeddedDocument>.
+
+	holds_one 'author' => (is => 'ro', isa => 'MyApp::Schema::PersonName', required => 1)
+
+Note that the C<holds_one> relationship has the unfortunate constraint of
+having to pass the full package name of the foreign document (e.g. MyApp::Schema::PersonName
+above), whereas other relationship types (except C<holds_many> which has
+the same constraint) require the class name only (e.g. Novel).
+
+In the database, this relationship is represented in the referencing (i.e.
+holding) document like this:
+
+	{ ... author => { first_name => 'Arthur', middle_name => 'Conan', last_name => 'Doyle' } ... }
+
+Calling C<author()> on the referencing document returns the embedded
+document, after expansion:
+
+	$doc->author->first_name; # returns 'Arthur'
+
+=cut
+
 sub holds_one {
 	my ($meta, $name, %opts) = @_;
 
@@ -108,6 +195,27 @@ sub holds_one {
 
 	$meta->add_attribute($name => %opts);
 }
+
+=head2 holds_many
+
+Specifies that the document has an attribute which holds a list (array)
+of embedded documents (a.k.a sub-documents) in their entirety. These
+embedded documents are represented by a class that C<does>
+L<MongoDBx::Class::EmbeddedDocument>.
+
+	holds_many 'tags' => (is => 'ro', isa => 'MyApp::Schema::Tag', predicate => 'has_tags')
+
+Note that the C<holds_many> relationship has the unfortunate constraint of
+having to pass the full package name of the foreign document (e.g. MyApp::Schema::PersonName
+above), whereas other relationship types (except C<holds_one> which has
+the same constraint) require the class name only (e.g. Novel).
+
+In the database, this relationship is represented in the referencing (i.e.
+holding) document like this:
+
+	{ ... tags => [ { category => 'mystery', subcategory => 'thriller' }, { category => 'mystery', subcategory => 'detective' } ] ... }
+
+=cut
 
 sub holds_many {
 	my ($meta, $name, %opts) = @_;
@@ -124,6 +232,30 @@ sub holds_many {
 		return @{$self->$attr || []};
 	});
 }
+
+=head2 joins_one
+
+Specifies that the document is referenced by one other document. The reference
+in the other document to this document is in the form documented by
+L<MongoDBx::Class::Reference>. This "pseudo-attribute" requires
+two new options: 'coll', with the name of the collection in which the
+referencing document is located, and 'ref', with the name of the attribute
+which is referencing the document. If 'coll' isn't provided, the referencing
+document is searching in the same collection.
+
+	joins_one 'synopsis' => (is => 'ro', isa => 'Synopsis', coll => 'synopsis', ref => 'novel')
+
+In the database, this relationship is represented in the referencing
+document (located in the 'synopsis' collection) like this:
+
+	{ ... novel => { '$ref' => 'novels', '$id' => $mongo_oid } ... }
+
+When calling C<synopsis()> on a Novel document, a C<find_one()> query is
+performed like so:
+
+	$db->get_collection('synopsis')->find_one({ 'novel.$id' => $doc->_id })
+
+=cut
 
 sub joins_one {
 	my ($meta, $name, %opts) = @_;
@@ -142,6 +274,32 @@ sub joins_one {
 		return $self->_collection->_database->get_collection($coll_name)->find_one({ $ref.'.$id' => $self->_id });
 	});
 }
+
+=head2 joins_many
+
+Specifies that the document is referenced by other documents. The references
+in the other document to this document are in the form documented by
+L<MongoDBx::Class::Reference>. This "pseudo-attribute" requires two new
+options: 'coll', with the name of the collection in which the referencing
+documents are located, and 'ref', with the name of the attribute which
+is referncing the document. If 'coll' isn't provided, the referencing
+documents are searched in the same collection.
+
+	joins_many 'reviews' => (is => 'ro', isa => 'Review', coll => 'reviews', ref => 'novel')
+
+In the database, this relationship is represented in the referencing
+documents (located in the 'reviews' collection) like this:
+
+	{ ... novel => { '$ref' => 'novels', '$id' => $mongo_oid } ... }
+
+When calling C<reviews()> on a Novel document, a C<find()> query is
+performed like so:
+
+	$db->get_collection('reviews')->find({ 'novel.$id' => $doc->_id })
+
+And thus a L<MongoDBx::Class::Cursor> is returned.
+
+=cut
 
 sub joins_many {
 	my ($meta, $name, %opts) = @_;
@@ -199,7 +357,9 @@ L<http://search.cpan.org/dist/MongoDBx::Class/>
 
 =back
 
-=head1 ACKNOWLEDGEMENTS
+=head1 SEE ALSO
+
+L<MongoDBx::Class::Document>, L<MongoDBx::Class::EmbeddedDocument>, L<Moose>.
 
 =head1 LICENSE AND COPYRIGHT
 

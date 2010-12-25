@@ -9,13 +9,54 @@ use namespace::autoclean;
 
 MongoDBx::Class::Reference - An embedded document representing a reference to a different document (thus establishing a relationship)
 
+=head1 CONSUMES
+
+L<MongoDBx::Class::EmbeddedDocument>
+
+=head1 DESCRIPTION
+
+This class represents a reference (or "join") to a MongoDB document.
+In L<MongoDBx::Class>, references are expected to be in the DBRef format,
+as defined in L<http://www.mongodb.org/display/DOCS/Database+References>,
+for example:
+
+	{ '$ref': "collection_name", '$id': MongoDB::OID->new(value => "4cbca90d3a41e35916720100") }
+
 =cut
 
 with 'MongoDBx::Class::EmbeddedDocument';
 
-has 'ref_coll' => (is => 'rw', isa => 'Str', required => 1);
+=head1 ATTRIBUTES
 
-has 'ref_id' => (is => 'rw', isa => 'MongoDB::OID', required => 1);
+Aside from attributes provided by L<MongoDBx::Class::EmbeddedDocument>,
+the following attributes are provided:
+
+=head2 ref_coll
+
+A string representing the collection in which the reference document is
+stored (translates to the '$ref' hash key above).
+
+=head2 ref_id
+
+A L<MongoDB::OID> object with the internal ID of the referenced document
+(translates to the '$id' hash key above).
+
+=cut
+
+has 'ref_coll' => (is => 'ro', isa => 'Str', required => 1);
+
+has 'ref_id' => (is => 'ro', isa => 'MongoDB::OID', required => 1);
+
+=head1 METHODS
+
+Aside from methods provided by L<MongoDBx::Class::EmbeddedDocument>,
+the following methods are provided:
+
+=head2 load()
+
+Returns the document referenced by this object, after expansion.
+
+=cut
 
 sub load {
 	my $self = shift;
@@ -61,7 +102,9 @@ L<http://search.cpan.org/dist/MongoDBx::Class/>
 
 =back
 
-=head1 ACKNOWLEDGEMENTS
+=head1 SEE ALSO
+
+L<MongoDBx::Class::EmbeddedDocument>.
 
 =head1 LICENSE AND COPYRIGHT
 

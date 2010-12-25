@@ -56,6 +56,9 @@ MongoDBx::Class - Flexible ORM for MongoDB databases
 	# connect to a MongoDB server
 	my $conn = $dbx->connect(host => 'localhost', port => 27017);
 
+	# be safe by default
+	$conn->safe(1);
+
 	# get a MongoDB database
 	my $db = $conn->get_database('people');
 
@@ -69,6 +72,8 @@ MongoDBx::Class - Flexible ORM for MongoDB databases
 	$person->delete;
 
 =head1 DESCRIPTION
+
+WARNING: THIS IS ALPHA SOFTWARE.
 
 L<MongoDBx::Class> is a flexible object relational mapper (ORM) for
 L<MongoDB> databases. Given a schema-like collection of document classes,
@@ -147,6 +152,11 @@ With MongoDBx::Class, you can connect to as many databases as you want.
 benchmarks, an application converted from Mongoose to MongoDBx::Class
 showed an increase of speed in orders of magnitude.
 
+=item * In Mongoose, your document class attributes are expected to be
+read-write (i.e. C<is => 'rw'> in Moose), otherwise expansion will fail.
+This is not the case with MongoDBx::Class, your attributes can safely be
+read-only.
+
 =back
 
 Another ORM for MongoDB is L<Mongrel>, which doesn't use Moose and thus is
@@ -158,12 +168,12 @@ specific comparisons here.
 
 Even before Mongoose was born, you could use MongoDB as a backend for
 L<KiokuDB>, by using L<KiokuDB-Backend-MongoDB>. However, KiokuDB is
-considered a database of its own, and thus this isn't really an ORM
-for MongoDB. L<Mongoose::Intro|Mongoose::Intro/"Why not use KiokuDB?">
-already gives a pretty convincing case why and when you shouldn't or
-should want to use KiokuDB.
+considered a database of its own and uses some conventions which doesn't
+fit well with MongoDB. L<Mongoose::Intro|Mongoose::Intro/"Why not use KiokuDB?">
+already gives a pretty convincing case when and why you should or shouldn't
+want to use KiokuDB.
 
-=head2 CAVEATS
+=head2 CAVEATS AND THINGS TO CONSIDER
 
 There are two main caveats for using MongoDBx::Class as of today:
 
@@ -173,7 +183,7 @@ There are two main caveats for using MongoDBx::Class as of today:
 (and fixed) all the time. Don't rely on it for production use yet. You have
 been warned.
 
-=item * MongoDBx::Class's flexibility is dependant on its ability to recognise
+=item * MongoDBx::Class's flexibility is dependant on its ability to recognize
 which class a document in a MongoDB collection expands to. Currently,
 MongoDBx::Class requires every document to have an attribute called "_class"
 that contains the name of the document class to use. This isn't very
@@ -183,11 +193,17 @@ some preparations to use existing MongoDB database with MongoDBx::Class -
 you will have to update every document in the database with the "_class"
 attribute.
 
+=item * References (representing joins) are expected to be in the DBRef
+format, as defined in L<http://www.mongodb.org/display/DOCS/Database+References>.
+If your database references aren't in this format, you'll have to convert
+them first.
+
 =back
 
 =head2 TUTORIAL
 
 To start using MongoDBx::Class, please read L<MongoDBx::Class::Tutorial>.
+It also contains a list of frequently asked questions.
 
 =head1 CLASS METHODS
 
@@ -196,12 +212,6 @@ To start using MongoDBx::Class, please read L<MongoDBx::Class::Tutorial>.
 Creates a new instance of this module. Requires the namespace of the
 database schema to use. The schema will be immediately loaded, but no
 connection to a MongoDB server is made yet.
-
-=cut
-
-sub BUILD {
-	shift->_load_schema;
-}
 
 =head1 ATTRIBUTES
 
@@ -266,6 +276,40 @@ sub _load_schema {
 	}
 }
 
+=head2 BUILD()
+
+Automatically called when creating a new instance of this module. This
+simply calls C<_load_schema()>.
+
+=cut
+
+sub BUILD {
+	shift->_load_schema;
+}
+
+=head1 TODO
+
+=over
+
+=item * Proof read the documentation as it probably contains a crazy amount of misspellings and errors.
+
+=item * Improve the tests.
+
+=item * Make the C<isa> option in L<MongoDBx::Class::Moose>'s relationship
+types consistent. Either use the full package names or the short class names.
+
+=item * Add support for the L<AnyMongo> driver.
+
+=item * Add some automatic data type inflations which are not natively supported
+by L<MongoDB>. Also add an alternative to MongoDB's DateTime native inflation,
+which doesn't support pre-epoch dates.
+
+=item * Add support for document attributes which are not to be saved in the database.
+
+=item * Try to find a way to not require documents to have the _class attribute.
+
+=back
+
 =head1 AUTHOR
 
 Ido Perlmuter, C<< <ido at ido50.net> >>
@@ -304,7 +348,14 @@ L<http://search.cpan.org/dist/MongoDBx::Class/>
 
 =back
 
+=head1 SEE ALSO
+
+L<MongoDB>, L<Mongoose>, L<Mongrel>, L<KiokuDB::Backend::MongoDB>.
+
 =head1 ACKNOWLEDGEMENTS
+
+Rodrigo de Oliveira, author of L<Mongoose>, whose code greatly assisted
+me in writing MongoDBx::Class.
 
 =head1 LICENSE AND COPYRIGHT
 
