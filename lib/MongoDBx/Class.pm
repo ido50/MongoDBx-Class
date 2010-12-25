@@ -126,7 +126,7 @@ application. That essentially kills multithreaded applications. Say you
 have a L<Plack>-based (doesn't have to be Plack-based though) web application
 deployed via L<Starman> (or any other web server for that matter), which
 is a pre-forking web server, you're pretty much doomed. As
-<MongoDB's driver|MongoDB::Connection/"Multithreading"> states, it doesn't
+L<MongoDB's driver|MongoDB::Connection/"Multithreading"> states, it doesn't
 support connection pooling, so every fork has to have its own connection
 to the MongoDB server. Mongoose being a singleton means your threads will
 not have a connection to the server, and you're screwed. MongoDBx::Class
@@ -167,7 +167,7 @@ is currently lacking, and I haven't given it a try, so I can't draw
 specific comparisons here.
 
 Even before Mongoose was born, you could use MongoDB as a backend for
-L<KiokuDB>, by using L<KiokuDB-Backend-MongoDB>. However, KiokuDB is
+L<KiokuDB>, by using L<KiokuDB::Backend::MongoDB>. However, KiokuDB is
 considered a database of its own and uses some conventions which doesn't
 fit well with MongoDB. L<Mongoose::Intro|Mongoose::Intro/"Why not use KiokuDB?">
 already gives a pretty convincing case when and why you should or shouldn't
