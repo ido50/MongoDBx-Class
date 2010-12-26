@@ -387,9 +387,9 @@ adds the ability to use safe operations by default. Lets activate it first:
 
 	$dbx->conn->safe(1);
 
-Now we don't need to pass C<<{ safe => 1 }>> to our C<insert>s, C<update>s
+Now we don't need to pass C<< { safe => 1 } >> to our C<insert>s, C<update>s
 and other operations. If you're doing mostly safe operations, but need to
-do unsafe operations from time to time, you can pass C<<{ safe => 0 }>>.
+do unsafe operations from time to time, you can pass C<< { safe => 0 } >>.
 
 Lets create a novel document:
 
@@ -471,7 +471,7 @@ Now for our reviews:
 	$avg_score = $total_score / scalar(@reviews);
 	print $avg_score; # prints 3
 
-If we now run C<<$novel->reviews()>>, we'd get a L<MongoDBx::Class::Cursor>
+If we now run C<< $novel->reviews() >>, we'd get a L<MongoDBx::Class::Cursor>
 back. And since we've created a method modification in the Novel class
 on this method, this cursor will also be sorted.
 

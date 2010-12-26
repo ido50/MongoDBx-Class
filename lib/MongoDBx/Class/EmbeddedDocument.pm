@@ -74,7 +74,7 @@ The following methods are provided:
 
 =head2 _database()
 
-Convenience shortcut for running C<<$embd_doc->_collection->_database>>.
+Convenience shortcut for running C<< $embd_doc->_collection->_database >>.
 
 =cut
 

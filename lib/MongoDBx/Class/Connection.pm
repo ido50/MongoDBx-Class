@@ -54,7 +54,7 @@ A hash-ref of document classes loaded. This is a required attribute
 =head2 safe
 
 A boolean value indicating whether to use safe operations (e.g. inserts
-and updates) by default - without the need to pass C<<{ safe => 1 }>> to
+and updates) by default - without the need to pass C<< { safe => 1 } >> to
 relevant methods - or not. False by default.
 
 =cut

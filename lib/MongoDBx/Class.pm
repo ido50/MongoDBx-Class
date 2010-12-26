@@ -153,7 +153,7 @@ benchmarks, an application converted from Mongoose to MongoDBx::Class
 showed an increase of speed in orders of magnitude.
 
 =item * In Mongoose, your document class attributes are expected to be
-read-write (i.e. C<<is => 'rw'>> in Moose), otherwise expansion will fail.
+read-write (i.e. C<< is => 'rw' >> in Moose), otherwise expansion will fail.
 This is not the case with MongoDBx::Class, your attributes can safely be
 read-only.
 

@@ -195,7 +195,7 @@ sub remove {
 
 =head2 _database()
 
-Convenience method, shortcut for C<<$doc->_collection->_database>>.
+Convenience method, shortcut for C<< $doc->_collection->_database >>.
 
 =cut
 
@@ -205,7 +205,7 @@ sub _database {
 
 =head2 _connection()
 
-Convenience method, shortcut for C<<$doc->_database->_connection>>.
+Convenience method, shortcut for C<< $doc->_database->_connection >>.
 
 =cut
 
