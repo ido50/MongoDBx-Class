@@ -1,6 +1,8 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+
+0.3       2010-12-26 12:15:03 Asia/Jerusalem
 	- Fixed typos, errors and mistakes in the distribution's documentation
 	- Added another item to the CAVEATS AND THINGS TO CONSIDER section of MongoDBx/Class.pm
 	- Temporarily added a bypass for the test problem until I can figure
