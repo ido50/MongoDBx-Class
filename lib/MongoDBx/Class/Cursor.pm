@@ -42,7 +42,7 @@ modifications are performed:
 =head2 next()
 
 Returns the next document in the cursor, if any. Automatically expands that
-document to the appropriate class (if _class attribute exists, otherwise
+document to the appropriate class (if '_class' attribute exists, otherwise
 document is returned as is).
 
 =cut
@@ -58,8 +58,8 @@ around 'next' => sub {
 =head2 sort( $rules )
 
 Adds a sort to the cursor and returns the cursor itself for chaining.
-C<$rules> can either be an unordered hash-ref, and ordered L<Tie::IxHash>
-object, or an array reference such as this:
+C<$rules> can either be an unordered hash-ref, an ordered L<Tie::IxHash>
+object, or an ordered array reference such as this:
 
 	$cursor->sort([ date => -1, time => -1, subject => 1 ])
 

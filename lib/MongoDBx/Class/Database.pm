@@ -18,7 +18,7 @@ L<MongoDB::Database>
 =head1 SYNOPSIS
 
 	# get a database object from your connection object
-	my $db = $conn->get_database($db_name); # or simply $conn->$db_name
+	my $db = $dbx->conn->get_database($db_name); # or simply $dbx->conn->$db_name
 
 =head1 DESCRIPTION
 

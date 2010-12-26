@@ -43,11 +43,13 @@ special attributes are added:
 =head2 namespace
 
 A string representing the namespace of document classes to load (e.g.
-MyApp::Schema). This is a required attribute.
+MyApp::Schema). This is a required attribute (automatically received from
+the MongoDBx::Class object).
 
 =head2 doc_classes
 
-A hash-ref of document classes loaded. This is a required attribute.
+A hash-ref of document classes loaded. This is a required attribute
+(automatically received from the MongoDBx::Class object).
 
 =head2 safe
 
@@ -87,8 +89,8 @@ Overrides the current value of the safe attribute with a new boolean value.
 
 Returns the full name (a.k.a namespace) of a collection (that is the database
 name, followed by a dot, and the collection name), and a document hash-ref,
-and attempts to expand it according to the _class attribute that should
-exists in the document. If it doesn't exist, the document is returned as
+and attempts to expand it according to the '_class' attribute that should
+exist in the document. If it doesn't exist, the document is returned as
 is.
 
 This is mostly used internally and you don't have to worry about expansion,
@@ -99,14 +101,21 @@ it's done automatically.
 sub expand {
 	my ($self, $coll_ns, $doc) = @_;
 
+	# make sure we've received the namespace and a hash-ref document
 	return unless $coll_ns && $doc && ref $doc eq 'HASH';
 
+	# extract the database name and the collection name from the namespace
 	my ($db_name, $coll_name) = ($coll_ns =~ m/^([^.]+)\.(.+)$/);
 
+	# get the collection
 	my $coll = $self->get_database($db_name)->get_collection($coll_name);
 
+	# return the document as is if it doesn't have a _class attribute
 	return $doc unless exists $doc->{_class};
 
+	# remove the schema namespace from the document class (we do not
+	# use the full package name internally) and attempt to find that
+	# document class. return the document as is if class isn't found
 	my $dc_name = $doc->{_class};
 	my $ns = $self->namespace;
 	$dc_name =~ s/^${ns}:://;
@@ -115,6 +124,7 @@ sub expand {
 
 	return $doc unless $dc;
 
+	# start building the document object
 	my %attrs = (
 		_collection => $coll,
 		_class => $doc->{_class},
@@ -138,6 +148,7 @@ sub expand {
 				ref_coll => $doc->{$name}->{'$ref'},
 				ref_id => $doc->{$name}->{'$id'},
 			);
+		# is this an array-ref of MongoDBx::Class::References?
 		} elsif ($_->{isa} eq 'ArrayOfMongoDBx::Class::CoercedReference') {
 			my $name = $_->name;
 			$name =~ s!^_!!;
@@ -153,7 +164,8 @@ sub expand {
 					ref_coll => $ref->{'$ref'},
 					ref_id => $ref->{'$id'},
 				));
-			}				
+			}
+		# is this an embedded document (or array-ref of embedded documents)?			
 		} elsif ($_->documentation && $_->documentation eq 'MongoDBx::Class::EmbeddedDocument') {
 			my $edc_name = $_->{isa};
 			$edc_name =~ s/^${ns}:://;
@@ -179,6 +191,7 @@ sub expand {
 				$doc->{$_->name}->{_class} = $edc_name;
 				$attrs{$_->name} = $self->expand($coll_ns, $doc->{$_->name});
 			}
+		# just pass the value as is
 		} else {
 			next unless exists $doc->{$_->name} && defined $doc->{$_->name};
 			$attrs{$_->name} = $doc->{$_->name};

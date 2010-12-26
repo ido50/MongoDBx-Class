@@ -54,13 +54,13 @@ MongoDBx::Class - Flexible ORM for MongoDB databases
 	my $dbx = MongoDBx::Class->new(namespace => 'MyApp::Model::DB');
 
 	# connect to a MongoDB server
-	my $conn = $dbx->connect(host => 'localhost', port => 27017);
+	$dbx->connect(host => 'localhost', port => 27017);
 
 	# be safe by default
-	$conn->safe(1);
+	$dbx->conn->safe(1);
 
 	# get a MongoDB database
-	my $db = $conn->get_database('people');
+	my $db = $dbx->conn->get_database('people');
 
 	# insert a person
 	my $person = $db->insert({ name => 'Some Guy', birth_date => '1984-06-12', _class => 'Person' });
@@ -103,7 +103,7 @@ you have a collection called 'people' with documents representing, well,
 people, but these people can either be teachers or students. Also, students
 may assume the role "hall monitor". With MongoDBx::Class, you can create
 a common base class, say "People", and two more classes that extend it - 
-"Teacher" and "Student" with attributes that are only relevant to themselves.
+"Teacher" and "Student" with attributes that are only relevant to each one.
 You also create a role called "HallMonitor", possibly with some methods
 of its own. You can save all these "people documents" into a single
 MongoDB collection, and when fetching documents from that collection,
@@ -113,7 +113,7 @@ have to apply roles yourself - at least for now).
 =head2 COMPARISON WITH OTHER MongoDB ORMs
 
 As MongoDB is rather young, there aren't many options out there, though
-CPAN has some pretty good options, and will probably have more as MongoDB
+CPAN has some pretty good ones, and will probably have more as MongoDB
 popularity rises.
 
 The first MongoDB ORM in CPAN was L<Mongoose>, and while it's a very good
@@ -125,13 +125,13 @@ meaning only one instance of a Mongoose-based schema can be used in an
 application. That essentially kills multithreaded applications. Say you
 have a L<Plack>-based (doesn't have to be Plack-based though) web application
 deployed via L<Starman> (or any other web server for that matter), which
-is a pre-forking web server, you're pretty much doomed. As
+is a pre-forking web server - you're pretty much doomed. As
 L<MongoDB's driver|MongoDB::Connection/"Multithreading"> states, it doesn't
 support connection pooling, so every fork has to have its own connection
 to the MongoDB server. Mongoose being a singleton means your threads will
 not have a connection to the server, and you're screwed. MongoDBx::Class
 does not suffer this limitation. You can start as many connections as you
-want. If you're running in a pre-forking environment, you don't have to
+like. If you're running in a pre-forking environment, you don't have to
 worry about it at all.
 
 Other differences from Mongoose include:
@@ -145,8 +145,8 @@ use L<MongoDB>'s syntax directly.
 only, and a collection can only have documents of that class. MongoDBx::Class
 doesn't have that limitation. Do what you like.
 
-=item * Mongoose has limited support for multiple database connections.
-With MongoDBx::Class, you can connect to as many databases as you want.
+=item * Mongoose has limited support for multiple database usage.
+With MongoDBx::Class, you can use as many databases as you want.
 
 =item * MongoDBx::Class is way faster. While I haven't performed any real
 benchmarks, an application converted from Mongoose to MongoDBx::Class
@@ -159,7 +159,7 @@ read-only.
 
 =back
 
-Another ORM for MongoDB is L<Mongrel>, which doesn't use Moose and thus is
+Another ORM for MongoDB is L<Mongrel>, which doesn't use Moose and is thus
 lighter (though as L<MongoDB> is already Moose-based, I see no benefit here).
 It uses L<Oogly> for data validation (while Moose has its own type validation),
 and seems to define its own syntax as well. Unfortunately, documentation
@@ -175,11 +175,11 @@ want to use KiokuDB.
 
 =head2 CAVEATS AND THINGS TO CONSIDER
 
-There are two main caveats for using MongoDBx::Class as of today:
+There are two main caveats when using MongoDBx::Class as of today:
 
-=over
+=over 4
 
-=item * It's alpha software. This is the first release, and bugs are found
+=item * It's alpha software. This is an early release, and bugs are found
 (and fixed) all the time. Don't rely on it for production use yet. You have
 been warned.
 
@@ -198,20 +198,16 @@ format, as defined in L<http://www.mongodb.org/display/DOCS/Database+References>
 If your database references aren't in this format, you'll have to convert
 them first.
 
+=item * The '_id' attribute of all your documents has to be an internally
+generated L<MongoDB::OID>. This limitation may or may not be lifted in
+the future.
+
 =back
 
 =head2 TUTORIAL
 
 To start using MongoDBx::Class, please read L<MongoDBx::Class::Tutorial>.
 It also contains a list of frequently asked questions.
-
-=head1 CLASS METHODS
-
-=head2 new( namespace => $namespace )
-
-Creates a new instance of this module. Requires the namespace of the
-database schema to use. The schema will be immediately loaded, but no
-connection to a MongoDB server is made yet.
 
 =head1 ATTRIBUTES
 
@@ -232,9 +228,17 @@ C<connect()> method is called.
 
 A hash-ref of document classes found when loading the schema.
 
+=head1 CLASS METHODS
+
+=head2 new( namespace => $namespace )
+
+Creates a new instance of this module. Requires the namespace of the
+database schema to use. The schema will be immediately loaded, but no
+connection to a MongoDB server is made yet.
+
 =head1 OBJECT METHODS
 
-=head2 connect( [host => $host], [port => $port] )
+=head2 connect( [ host => $host, [ port => $port ] ] )
 
 Initiates a new connection to a MongoDB server running on a certain host
 and listening to a certain port. If a host is not provided, 'localhost'
@@ -249,12 +253,27 @@ sub connect {
 	$opts{host} ||= 'localhost';
 	$opts{port} ||= 27017;
 
-	$self->_set_conn(MongoDBx::Class::Connection->new(host => $opts{host}, port => $opts{port}, namespace => $self->namespace, doc_classes => $self->doc_classes));
+	my $conn = MongoDBx::Class::Connection->new(host => $opts{host}, port => $opts{port}, namespace => $self->namespace, doc_classes => $self->doc_classes);
+
+	$self->_set_conn($conn);
+
+	return $conn;
 }
 
 =head1 INTERNAL METHODS
 
-The following methods are only to be used internally by MongoDBx::Class.
+The following methods are only to be used internally.
+
+=head2 BUILD()
+
+Automatically called when creating a new instance of this module. This
+simply calls C<_load_schema()>.
+
+=cut
+
+sub BUILD {
+	shift->_load_schema;
+}
 
 =head2 _load_schema()
 
@@ -276,22 +295,9 @@ sub _load_schema {
 	}
 }
 
-=head2 BUILD()
-
-Automatically called when creating a new instance of this module. This
-simply calls C<_load_schema()>.
-
-=cut
-
-sub BUILD {
-	shift->_load_schema;
-}
-
 =head1 TODO
 
-=over
-
-=item * Proof read the documentation as it probably contains a crazy amount of misspellings and errors.
+=over 6
 
 =item * Improve the tests.
 

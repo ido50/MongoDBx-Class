@@ -25,11 +25,11 @@ L<Moose>
 
 	has 'title' => (is => 'ro', isa => 'Str', required => 1, writer => 'set_title');
 
-	holds_one 'author' => (is => 'ro', isa => 'PersonName', required => 1, writer => 'set_author');
+	holds_one 'author' => (is => 'ro', isa => 'MyApp::Schema::PersonName', required => 1, writer => 'set_author');
 
 	has 'year' => (is => 'ro', isa => 'Int', predicate => 'has_year', writer => 'set_year');
 
-	has_many 'related_novels' => (is => 'ro', isa => 'Novel', predicate => 'has_related_novels', writer => 'set_related_novels', clearer => 'clear_related_novels');
+	has_many 'related_novels' => (is => 'ro', isa => 'MyApp::Schema::Novel', predicate => 'has_related_novels', writer => 'set_related_novels', clearer => 'clear_related_novels');
 
 	joins_many 'reviews' => (is => 'ro', isa => 'Review', coll => 'reviews', ref => 'novel');
 
@@ -113,7 +113,7 @@ sub belongs_to {
 Specifies that the document has an attribute which references another
 document. The reference is in the form documented by L<MongoDBx::Class::Reference>.
 This is entirely equivalent to L</belongs_to>, the two are provided merely
-for convenience.
+for convenience, the difference is purely semantic.
 
 =cut
 
@@ -135,7 +135,7 @@ document like this:
 	{ ... related_articles => [{ '$ref' => 'coll_name', '$id' => $mongo_oid_1 }, { '$ref' => 'other_coll_name', '$id' => $mongo_oid_2 }] ... }
 
 Calling C<related_articles()> on the referencing document returns an array
-of all references documents, after expansion:
+of all referenced documents, after expansion:
 
 	foreach ($doc->related_articles) {
 		print $_->title, "\n";
@@ -206,7 +206,7 @@ L<MongoDBx::Class::EmbeddedDocument>.
 	holds_many 'tags' => (is => 'ro', isa => 'MyApp::Schema::Tag', predicate => 'has_tags')
 
 Note that the C<holds_many> relationship has the unfortunate constraint of
-having to pass the full package name of the foreign document (e.g. MyApp::Schema::PersonName
+having to pass the full package name of the foreign document (e.g. MyApp::Schema::Tag
 above), whereas other relationship types (except C<holds_one> which has
 the same constraint) require the class name only (e.g. Novel).
 
@@ -241,7 +241,7 @@ L<MongoDBx::Class::Reference>. This "pseudo-attribute" requires
 two new options: 'coll', with the name of the collection in which the
 referencing document is located, and 'ref', with the name of the attribute
 which is referencing the document. If 'coll' isn't provided, the referencing
-document is searching in the same collection.
+document is searched in the same collection.
 
 	joins_one 'synopsis' => (is => 'ro', isa => 'Synopsis', coll => 'synopsis', ref => 'novel')
 
@@ -254,6 +254,10 @@ When calling C<synopsis()> on a Novel document, a C<find_one()> query is
 performed like so:
 
 	$db->get_collection('synopsis')->find_one({ 'novel.$id' => $doc->_id })
+
+Note that passing a 'required' option to C<joins_one> has no effect at all,\
+the existance of the referencing document is never enforced, so C<undef>
+can be returned.
 
 =cut
 
@@ -298,6 +302,10 @@ performed like so:
 	$db->get_collection('reviews')->find({ 'novel.$id' => $doc->_id })
 
 And thus a L<MongoDBx::Class::Cursor> is returned.
+
+Note that passing the 'required' option to C<joins_many> has no effect
+at all, and the existance of referncing documents is never enforced, so
+the cursor can have a count of zero.
 
 =cut
 

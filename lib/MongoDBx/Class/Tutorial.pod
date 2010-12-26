@@ -5,8 +5,8 @@ MongoDBx::Class::Tutorial - Tutorial for using MongoDBx::Class
 =head1 INTRODUCTION
 
 L<MongoDBx::Class> is a flexible object relational mapper (ORM) for
-L<MongoDB> databases. Before reading this tutorial, please read the
-L<description|MongoDBx::Class/"DESCRIPTION"> section of L<MongoDBx::Class>.
+L<MongoDB> databases. Before reading this tutorial, please read
+L<MongoDBx::Class/"DESCRIPTION">.
 
 =head1 CREATING DOCUMENT CLASSES
 
@@ -31,7 +31,7 @@ to be consumed by document classes. When documents are expanded from the
 database, this role is applied to them and thus provides them some common
 attributes and methods.
 
-=item * L<MongoDBx::Class::EmbeddedDocument> a L<Moose role|Moose::Role>
+=item * L<MongoDBx::Class::EmbeddedDocument> - a L<Moose role|Moose::Role>
 intended to be consumed by embedded document classes. When embedded
 documents are found inside other documents and expanded, this role is
 applied to them and thus provides them some common attributes and methods.
@@ -55,7 +55,7 @@ embedded document that has first and last names, and possibly a middle name.
 
 =item * The synopsis of the novel will be stored as a standalone document
 in the 'synopsis' collection, and will simply reference the novel with
-the 'novel' attribute.
+a 'novel' attribute.
 
 =item * The list of tags will be stored in the novel document as an array
 of embedded documents.
@@ -64,7 +64,7 @@ of embedded documents.
 as an array of database references to other novels.
 
 =item * The reviews for every novel are stored as standalone documents in 
-the 'reviews' collection, and will simply reference the novel with the
+the 'reviews' collection, and will simply reference the novel with a
 'novel' attribute.
 
 =back
@@ -189,7 +189,7 @@ the class names only (such as 'Snyopsis'). This inconsistency is only
 temporary, and will change in future versions, so keep your finger on the
 pulse.
 
-Lets create out two embedded document classes. We'll start with PersonName:
+Lets create our two embedded document classes. We'll start with PersonName:
 
 	package MyApp::Schema::PersonName;
 
@@ -346,7 +346,7 @@ one collection for every document class. Every collection can have documents
 of one or more classes, and documents of the same class can be stored in
 one or more collections, even databases.
 
-=head1 LOADING MongoDBx::Class AND CONNECTING TO A MONGODB SERVER
+=head1 LOADING MongoDBx::Class AND CONNECTING TO A MongoDB SERVER
 
 The next step is loading the schema we've just created, and connecting to
 a MongoDB server:
@@ -367,9 +367,12 @@ can connect to a specific server like so:
 
 	$dbx->connect(host => $host, port => $port);
 
-As opposed to the L<MongoDB> module, here we do not get a connection object
-back. Instead, the connect object is saved to the MongoDBx::Class object
-(C<$dbx> above) as the 'conn' attribute.
+While the C<connect()> method returns a L<MongoDBx::Class::Connection>
+object, we do not use it directly. The method also stores that object in
+the MongoDBx::Class object (C<$dbx> above) itself as the 'conn attribute,
+and we're supposed to use it from there.
+
+	$dbx->conn->get_database('whatever');
 
 =head1 INSERTING DOCUMENTS
 
@@ -380,13 +383,13 @@ biggest difference between directly using MongoDB and using MongoDBx::Class,
 is the automatic expanding and collapsing of documents. Documents are
 automatically expanded when inserting documents only if the C<safe> option
 is on. By default, MongoDB performs unsafe operations. MongoDBx::Class
-adds the ability to use safe operation by default. Lets activate it first:
+adds the ability to use safe operations by default. Lets activate it first:
 
 	$dbx->conn->safe(1);
 
-Now we don't need to pass C<{ safe => 1 }> to our C<insert>s, C<update>s
+Now we don't need to pass C<<{ safe => 1 }>> to our C<insert>s, C<update>s
 and other operations. If you're doing mostly safe operations, but need to
-do unsafe operations from time to time, you can pass C<{ safe => 0 }>.
+do unsafe operations from time to time, you can pass C<<{ safe => 0 }>>.
 
 Lets create a novel document:
 
@@ -413,12 +416,15 @@ Notice that when inserting the novel document, we've directly inserted
 the PersonName embedded document and the Tags embedded documents as
 hash-refs.
 
-This insert, which was safe, returns the novel document after expansion:
+This insert, which was safe (since the 'safe' attribute of our connection
+object had a true value), returns the novel document after expansion:
 
 	$novel->author->name; # prints 'Arthur Conan Doyle'
 
 If the insert was unsafe, we'd just get the L<MongoDB::OID> of the document
-back.
+back. But note that you can't get the OID object and immediately attempt
+to load the document with it, as you can't predict the order in which
+MongoDB will perform asynchronous operations.
 
 Lets insert our synopsis now:
 
@@ -465,7 +471,7 @@ Now for our reviews:
 	$avg_score = $total_score / scalar(@reviews);
 	print $avg_score; # prints 3
 
-If we now run C<<$novel->reviews>>, we'd get a L<MongoDBx::Class::Cursor>
+If we now run C<<$novel->reviews()>>, we'd get a L<MongoDBx::Class::Cursor>
 back. And since we've created a method modification in the Novel class
 on this method, this cursor will also be sorted.
 
@@ -476,7 +482,7 @@ on this method, this cursor will also be sorted.
 =head1 SEARCHING DOCUMENTS
 
 MongoDBx::Class adds automatic expansion to document searching, plus some
-convenient shortcuts. Say we've received the ID of a novel article as
+convenient shortcuts. Say we've received the ID of a novel document as
 input, and we want to load it. With MongoDB, we'd probably do:
 
 	$db->novels->find_one({ _id => MongoDB::OID->new(value => $oid) })
@@ -516,7 +522,7 @@ like so:
 Updating documents is much easier with MongoDBx::Class. There are two
 ways to update documents in MongoDBx::Class:
 
-=over
+=over 2
 
 =item * The older, L<MongoDB> way of using the C<update()> method in
 L<MongoDBx::Class::Collection>. This is now mostly used to update multiple

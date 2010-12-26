@@ -1,6 +1,10 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+	- Fixed typos, errors and mistakes in the distribution's documentation
+	- Added another item to the CAVEATS AND THINGS TO CONSIDER section of MongoDBx/Class.pm
+	- Temporarily added a bypass for the test problem until I can figure
+	  out what's the problem.
 
 0.2       2010-12-25 23:13:25 Asia/Jerusalem
 	- Fixed bug preventing tests from loading the test schema

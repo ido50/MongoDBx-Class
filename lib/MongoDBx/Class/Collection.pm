@@ -22,10 +22,10 @@ L<MongoDB::Collection>
 	my $coll = $db->get_collection($coll_name); # or $db->$coll_name
 
 	# insert a document
-	my $doc = $db->insert({ title => 'The Valley of Fear', year => 1914, author => 'Conan Doyle', _class => 'Novel' }, { safe => 1 });
+	my $doc = $coll->insert({ title => 'The Valley of Fear', year => 1914, author => 'Conan Doyle', _class => 'Novel' }, { safe => 1 });
 
 	# find some documents
-	my @docs = $db->find({ author => 'Conan Doyle' })->sort({ year => 1 })->all;
+	my @docs = $coll->find({ author => 'Conan Doyle' })->sort({ year => 1 })->all;
 
 =head1 DESCRIPTION
 
@@ -42,7 +42,7 @@ No special attributes are added.
 =head1 OBJECT METHODS
 
 The following methods are available along with all methods defined in
-L<MongoDB::Collection>. However, most (or all) of those, are modifications
+L<MongoDB::Collection>. However, most (or all) of those are modifications
 of MongoDB::Collection methods.
 
 =head2 find( \%query, [ \%attrs ] )
@@ -52,7 +52,7 @@ of MongoDB::Collection methods.
 =head2 search( \%query, [ \%attrs ] )
 
 All three methods are equivalent (the last two aliases of the first).
-These methods perform a search for documents in the collection that match
+These methods perform a search for documents in the collection for documents matching
 a certain query and return a L<MongoDBx::Class::Cursor> object. Refer to
 L<MongoDB::Collection/"find($query)"> for more information about queries.
 
@@ -120,14 +120,14 @@ Searching by internal ID is thus much more convenient:
 	my $doc = $coll->find_one("4cbca90d3a41e35916720100");
 
 2. The matching document is automatically expanded to the appropriate
-document class, but only if it has the _class attribute (as described
+document class, but only if it has the '_class' attribute (as described
 in L<MongoDBx::Class/"CAVEATS AND THINGS TO CONSIDER">). If it doesn't, or if expansion is
 impossible due to other reasons, it will be returned as is (i.e. as a
 hash-ref).
 
 3. In MongoDB::Collection, passing a C<\%fields> hash-ref will result in
 the document being returned with those fields only (and the _id field).
-Behaviour of this when documents are expanded is currently undefined.
+Behavior of this when documents are expanded is currently undefined.
 
 =cut
 
@@ -150,8 +150,8 @@ around 'find_one' => sub {
 =head2 insert( \%doc, [ \%opts ] )
 
 Inserts the given document into the database. As opposed to the original
-insert method in L<MongoDB::Collection>, this method only accepts a hash-ref
-as the document to insert, and will C<croak> otherwise.
+insert method in L<MongoDB::Collection>, this method (currently) only
+accepts a hash-ref as the document to insert, and will C<croak> otherwise.
 
 An optional options hash-ref can be passed. If this hash-ref holds a safe
 key with a true value, insert will be safe (refer to L<MongoDB::Collection/"insert ($object, $options?)">
@@ -167,14 +167,14 @@ C<safe> in the C<\%opts> hash-ref.
 =head2 batch_insert( \@docs, [ \%opts ] )
 
 Receives an array-ref of documents and an optional hash-ref of options,
-and inserts all the documents to the collection one after another. C<\%opts>
+and inserts all the documents to the collection one after the other. C<\%opts>
 can have a "safe" key that should hold a boolean value. If true (and if
 your L<connection object|MongoDB::Connection> has a true value for the
 safe attribute), inserts will be safe, and an array of all the documents
 inserted (after expansion) will be returned. If false, an array with all
 the document IDs is returned.
 
-Documents to insert must be hash references. If one (or more) documents
+Documents to insert must (temporarily) be hash references. If one (or more) documents
 are not, this method will croak. No documents will be inserted even if
 just one is not a hash-ref and the rest are.
 
@@ -234,9 +234,9 @@ around 'update' => sub {
 
 =head2 ensure_index( $keys, [ \%options ] )
 
-Makes sure the given keys of this collection are indexed. Keys is either
-an unordered hash-ref, an ordered L<Tie::IxHash> object, or an order
-array refernce like this:
+Makes sure the given keys of this collection are indexed. C<$keys> is either
+an unordered hash-ref, an ordered L<Tie::IxHash> object, or an ordered
+array reference like this:
 
 	$coll->ensure_index([ title => 1, date => -1 ])
 
@@ -254,9 +254,11 @@ around 'ensure_index' => sub {
 
 =head1 INTERNAL METHODS
 
+The following methods are only to be used internally:
+
 =head2 _collapse_hash( \%object )
 
-Collapses an entier hash-ref for proper database insertions.
+Collapses an entire hash-ref for proper database insertions.
 
 =cut
 

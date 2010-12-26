@@ -17,13 +17,15 @@ MongoDBx::Class::Document - A MongoDBx::Class document role
 	use MongoDBx::Class::Moose; # use this instead of Moose;
 	use namespace::autoclean;
 
+	with 'MongoDBx::Class::Document';
+
 	has 'title' => (is => 'ro', isa => 'Str', required => 1, writer => 'set_title');
 
-	holds_one 'author' => (is => 'ro', isa => 'PersonName', required => 1, writer => 'set_author');
+	holds_one 'author' => (is => 'ro', isa => 'MyApp::Schema::PersonName', required => 1, writer => 'set_author');
 
 	has 'year' => (is => 'ro', isa => 'Int', predicate => 'has_year', writer => 'set_year');
 	
-	holds_many 'tags' => (is => 'ro', isa => 'Tag', predicate => 'has_tags');
+	holds_many 'tags' => (is => 'ro', isa => 'MyApp::Schema::Tag', predicate => 'has_tags');
 
 	joins_one 'synopsis' => (is => 'ro', isa => 'Synopsis', coll => 'synopsis', ref => 'novel');
 
@@ -106,15 +108,15 @@ sub oid {
 	shift->id;
 }
 
-=head2 update( [ \%object ], [ \%options ] )
+=head2 update( [ \%object, [ \%options ] ] )
 
 Saves a new version of the document to the database. The behavior of this
-method is dependant on the existance of an object hash-ref:
+method is dependant on the existance or non-existance of an object hash-ref:
 
 If an object hash-ref is provided, all of its key-value pairs are collapsed,
 and a C<$set> update is performed on them. For example:
 
-	$doc->update({ author => 'Sir Arthur Conan Doyle', year => 1895 })
+	$doc->update({ author => 'Sir Arthur Conan Doyle', year => 1895 }, $options)
 
 Will effectively result in something like this being performed:
 
@@ -136,7 +138,8 @@ Will effectively result in something like this being performed:
 	$coll->update({ _id => $doc->_id }, $collapsed_doc, $options)
 
 You can pass an options hash-ref just like with the C<update()> method
-of L<MongoDBx::Class::Collection>.
+of L<MongoDBx::Class::Collection>, but only if you pass an update object
+also.
 
 =cut
 
@@ -173,7 +176,7 @@ sub update {
 =head2 remove()
 
 Both methods are equivalent. They are shortcut methods for invoking the
-collections C<remove()> method on this document only. So, umm, they remove
+collection's C<remove()> method on this document only. So, umm, they remove
 the document. But note that this operation does not cascade, so documents
 which are considered dependant on this document (such as those that reference
 it with C<belongs_to>) will not be removed too.
@@ -202,7 +205,7 @@ sub _database {
 
 =head2 _connection()
 
-Convenience method, shortcut for C<<$doc->_connection->_database>>.
+Convenience method, shortcut for C<<$doc->_database->_connection>>.
 
 =cut
 
