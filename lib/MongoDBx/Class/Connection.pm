@@ -4,7 +4,6 @@ package MongoDBx::Class::Connection;
 
 use Moose;
 use namespace::autoclean;
-use Scalar::Util qw/blessed/;
 
 extends 'MongoDB::Connection';
 
