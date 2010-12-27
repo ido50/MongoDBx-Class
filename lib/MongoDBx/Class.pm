@@ -175,7 +175,8 @@ want to use KiokuDB.
 
 =head2 CAVEATS AND THINGS TO CONSIDER
 
-There are two main caveats when using MongoDBx::Class as of today:
+There are a few caveats and important facts to take note of when using
+MongoDBx::Class as of today:
 
 =over 4
 
