@@ -213,6 +213,23 @@ sub _connection {
 	shift->_database->_connection;
 }
 
+=head2 _attributes()
+
+Returns a list of names of all attributes the document object has, minus
+'_collection' and '_class', sorted alphabetically.
+
+=cut
+
+sub _attributes {
+	my @names;
+	foreach (ref(shift)->meta->get_all_attributes) {
+		next if $_->name =~ m/^_(class|collection)$/;
+		push(@names, $_->name);
+	}
+
+	return sort @names;
+}
+
 =head1 AUTHOR
 
 Ido Perlmuter, C<< <ido at ido50.net> >>
