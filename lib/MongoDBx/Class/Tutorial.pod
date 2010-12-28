@@ -476,7 +476,8 @@ back. And since we've created a method modification in the Novel class
 on this method, this cursor will also be sorted.
 
 	foreach ($novel->reviews) {
-		# do stuff
+		# $_ is now a MyApp::Schema::Review object
+		print $_->score;
 	}
 
 =head1 SEARCHING DOCUMENTS
@@ -496,7 +497,8 @@ And C<$oid> can either be the string ID, or a L<MongoDB::OID> object.
 If the document is found, and has the '_class' attribute, then it will be
 automatically expanded.
 
-	my $novel = $db->novels->find_one($oid);
+	my $novel = $db->novels->find_one($oid)
+		|| die "Oh my god I can't find this, kill me, kill me now";
 
 	print $novel->author->name; # again, prints 'Arthur Conan Doyle'
 
@@ -537,7 +539,7 @@ to update a specific document.
 First, lets take a look at the first way. Suppose we want to cheat and update
 all reviews for "The Valley of Fear" with a score of five:
 
-	$db->reviews->update({ 'novel.$id' => $novel->_id }, { '$set' => { score => 5 } }, { multiple => 1 });
+	$db->reviews->update({ 'novel.$id' => $novel->_id }, { '$set' => { score => 5 } }, { multiple => 1 }); # updates are by default singular, so we add the 'multiple' option
 
 This is exactly like using L<MongoDB::Collection> directly. If we're updating
 a specific document we've already loaded, however, MongoDBx::Class provides
@@ -556,7 +558,7 @@ This will effectively invoke a '$set' update like this:
 But this isn't really the Moose way of doing things, so MongoDBx::Class
 gives us yet another way of updating a document:
 
-	$novel->set_year(1915);
+	$novel->set_year(1915); # we can do this because we've added a 'writer' option to the 'year' attribute
 	$novel->update;
 
 When invoking C<update()> on a document object with no arguments, a "snapshot"
@@ -600,7 +602,7 @@ manually.
 You can still use the original C<remove()> method on collections, now mostly
 to remove multiple documents:
 
-	$db->get_collection('reviews')->remove({ 'novel.$id' => $novel->_id });
+	$db->get_collection('reviews')->remove({ 'novel.$id' => $novel->_id }); # removes are by default multiple
 
 =head1 FAQ
 

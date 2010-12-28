@@ -136,7 +136,7 @@ around 'find_one' => sub {
 
 	my $query = {};
 
-	if ($orig_query && ref $orig_query eq 'SCALAR') {
+	if ($orig_query && ref $orig_query eq 'SCALAR' && length($orig_query) == 24) {
 		$query->{_id} = MongoDB::OID->new(value => $orig_query);
 	} elsif ($orig_query && ref $orig_query eq 'MongoDB::OID') {
 		$query->{_id} = $orig_query;
