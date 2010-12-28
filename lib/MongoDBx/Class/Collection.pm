@@ -147,11 +147,10 @@ around 'find_one' => sub {
 	return $self->$orig($query, $fields);
 };
 
-=head2 insert( \%doc, [ \%opts ] )
+=head2 insert( $doc, [ \%opts ] )
 
-Inserts the given document into the database. As opposed to the original
-insert method in L<MongoDB::Collection>, this method (currently) only
-accepts a hash-ref as the document to insert, and will C<croak> otherwise.
+Inserts the given document into the database, automatically collapsing
+it before insertion.
 
 An optional options hash-ref can be passed. If this hash-ref holds a safe
 key with a true value, insert will be safe (refer to L<MongoDB::Collection/"insert ($object, $options?)">
@@ -164,6 +163,10 @@ for the safe attribute, insert will be safe by default. If that is the case,
 and you want the specific insert to be unsafe, pass a false value for
 C<safe> in the C<\%opts> hash-ref.
 
+Document to insert can either be a hash-ref, a L<Tie::IxHash> object or
+an even-numbered array-ref, but currently only hash-refs are automatically
+collapsed.
+
 =head2 batch_insert( \@docs, [ \%opts ] )
 
 Receives an array-ref of documents and an optional hash-ref of options,
@@ -174,9 +177,9 @@ safe attribute), inserts will be safe, and an array of all the documents
 inserted (after expansion) will be returned. If false, an array with all
 the document IDs is returned.
 
-Documents to insert must (temporarily) be hash references. If one (or more) documents
-are not, this method will croak. No documents will be inserted even if
-just one is not a hash-ref and the rest are.
+Documents to insert can either be hash-refs, L<Tie::IxHash> objects or
+even-numbered array references, but currently only hash-refs are automatically
+collapsed.
 
 =cut
 
@@ -187,11 +190,7 @@ around 'batch_insert' => sub {
 	$opts->{safe} = 1 if $self->_database->_connection->safe && !defined $opts->{safe};
 
 	foreach (@$docs) {
-		croak 'Document to insert must be a hash reference (received '.ref($_).')'
-			unless ref $_ eq 'HASH';
-	}
-
-	foreach (@$docs) {
+		next unless ref $_ eq 'HASH';
 		foreach my $attr (keys %$_) {
 			$_->{$attr} = $self->_database->_connection->collapse($_->{$attr});
 		}
