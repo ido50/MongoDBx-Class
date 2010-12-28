@@ -104,7 +104,7 @@ DESCRIPTION
         MongoDBx::Class showed an increase of speed in orders of magnitude.
 
     *   In Mongoose, your document class attributes are expected to be
-        read-write (i.e. "<is =" 'rw'>> in Moose), otherwise expansion will
+        read-write (i.e. "is => 'rw'" in Moose), otherwise expansion will
         fail. This is not the case with MongoDBx::Class, your attributes can
         safely be read-only.
 
@@ -122,7 +122,8 @@ DESCRIPTION
     case when and why you should or shouldn't want to use KiokuDB.
 
   CAVEATS AND THINGS TO CONSIDER
-    There are two main caveats when using MongoDBx::Class as of today:
+    There are a few caveats and important facts to take note of when using
+    MongoDBx::Class as of today:
 
     *   It's alpha software. This is an early release, and bugs are found
         (and fixed) all the time. Don't rely on it for production use yet.

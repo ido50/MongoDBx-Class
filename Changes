@@ -1,6 +1,9 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+	- Added the _attributes method to document objects (standalone/embedded)
+	- Fixed some pod mistakes in the docs
+	- Improved the documentation a bit
 
 0.3       2010-12-26 12:15:03 Asia/Jerusalem
 	- Fixed typos, errors and mistakes in the distribution's documentation
