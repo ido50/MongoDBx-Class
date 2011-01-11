@@ -91,9 +91,15 @@ minus '_collection' and '_class', sorted alphabetically.
 
 sub _attributes {
 	my @names;
-	foreach (ref(shift)->meta->get_all_attributes) {
+	foreach (shift->meta->get_all_attributes) {
 		next if $_->name =~ m/^_(class|collection)$/;
-		push(@names, $_->name);
+		if ($_->{isa} =~ m/MongoDBx::Class::CoercedReference/ || ($_->documentation && $_->documentation eq 'MongoDBx::Class::EmbeddedDocument')) {
+			my $name = $_->name;
+			$name =~ s/^_//;
+			push(@names, $name);
+		} else {
+			push(@names, $_->name);
+		}
 	}
 
 	return sort @names;

@@ -5,6 +5,7 @@ use warnings;
 use Test::More;
 use lib 't/lib';
 use MongoDBx::Class;
+use DateTime;
 
 my $dbx = MongoDBx::Class->new(namespace => 'Schema');
 
@@ -12,7 +13,7 @@ my $dbx = MongoDBx::Class->new(namespace => 'Schema');
 if (scalar(keys %{$dbx->doc_classes}) != 5) {
 	plan skip_all => "Temporary skip due to schema not being found";
 } else {
-	plan tests => 11;
+	plan tests => 20;
 }
 
 SKIP: {
@@ -21,13 +22,15 @@ SKIP: {
 	SKIP: {
 		eval { $dbx->connect };
 
-		skip "Can't connect to MongoDB server", 10 if $@;
+		skip "Can't connect to MongoDB server", 19 if $@;
 
 		$dbx->conn->safe(1);
 		is($dbx->conn->safe, 1, "Using safe operations by default");
 
 		my $db = $dbx->conn->get_database('mongodbx_class_test');
 		my $novels_coll = $db->get_collection('novels');
+
+		$novels_coll->ensure_index([ title => 1, year => -1 ]);
 		
 		my $novel = $novels_coll->insert({
 			_class => 'Novel',
@@ -38,6 +41,7 @@ SKIP: {
 				middle_name => 'Conan',
 				last_name => 'Doyle',
 			},
+			added => DateTime->now(time_zone => 'Asia/Jerusalem'),
 			tags => [
 				{ category => 'mystery', subcategory => 'thriller' },
 				{ category => 'mystery', subcategory => 'detective' },
@@ -46,6 +50,8 @@ SKIP: {
 		});
 
 		is(ref($novel->_id), 'MongoDB::OID', 'document successfully inserted');
+
+		is(ref($novel->added), 'DateTime', 'added attribute successfully parsed');
 
 		is($novel->author->name, 'Arthur Conan Doyle', 'embedded document works');
 
@@ -91,16 +97,39 @@ SKIP: {
 		$avg_score = $total_score / scalar(@reviews);
 		is($avg_score, 3, 'average score correct');
 
-		$novel->update({ year => 1915 });
+		$novel->update({ year => 1915, 'author.middle_name' => 'Xoxa' });
 
-		my $found_novel = $db->novels->find_one({ _id => MongoDB::OID->new(value => $novel->id) });
+		is_deeply([$novel->_attributes], [qw/_id added author related_novels tags title year/], '_attributes okay');
+		is_deeply([$novel->author->_attributes], [qw/first_name last_name middle_name/], 'embedded _attributes okay');
+
+		my $found_novel = $db->novels->find_one($novel->id);
 		is($found_novel->reviews->count, 3, 'joins_many works correctly');
 		is($found_novel->year, 1915, "novel's year successfully changed");
+		is($found_novel->author->middle_name, 'Xoxa', "author's middle name successfully changed");
 
-		$novel->delete;
+		$found_novel->set_year(1914);
+		$found_novel->author->set_middle_name('Conan');
+		$found_novel->update();
 
-		my $novels = $db->novels->find({ title => 'The Valley of Fear' });
-		is($novels->count, 0, 'Novel successfully removed');
+		is($db->novels->find_one($found_novel->_id)->year, 1914, "novel's year successfully changed back");
+		is($db->novels->find_one({ _id => MongoDB::OID->new(value => $found_novel->oid) })->author->middle_name, 'Conan', "author's middle name successfully changed back");
+		
+		is($found_novel->added->year, DateTime->now->year, 'DateTime objects correctly parsed by MongoDBx::Class::ParsedAttribute::DateTime');
+
+		$synopsis->delete;
+
+		my $syns = $db->synopsis->find({ 'novel.$id' => $novel->_id });
+		is($syns->count, 0, 'Synopsis successfully removed');
+		
+		$db->reviews->update({ 'novel.$id' => $novel->_id }, { '$set' => { reviewer => 'John John' }, '$inc' => { score => 3 } }, { multiple => 1 });
+		my @scores;
+		my $john_john = 1;
+		foreach ($novel->reviews->sort([ score => -1 ])->all) {
+			undef $john_john if $_->reviewer ne 'John John';
+			push(@scores, $_->score);
+		}
+		is($john_john, 1, "Successfully replaced reviewer for all reviews");
+		is_deeply(\@scores, [8, 6, 4], "Successfully increased all scores by three");
 	}
 }
 

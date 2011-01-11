@@ -136,7 +136,7 @@ around 'find_one' => sub {
 
 	my $query = {};
 
-	if ($orig_query && ref $orig_query eq 'SCALAR' && length($orig_query) == 24) {
+	if ($orig_query && !ref $orig_query && length($orig_query) == 24) {
 		$query->{_id} = MongoDB::OID->new(value => $orig_query);
 	} elsif ($orig_query && ref $orig_query eq 'MongoDB::OID') {
 		$query->{_id} = $orig_query;
@@ -190,10 +190,8 @@ around 'batch_insert' => sub {
 	$opts->{safe} = 1 if $self->_database->_connection->safe && !defined $opts->{safe};
 
 	foreach (@$docs) {
-		next unless ref $_ eq 'HASH';
-		foreach my $attr (keys %$_) {
-			$_->{$attr} = $self->_database->_connection->collapse($_->{$attr});
-		}
+		next unless ref $_ eq 'HASH' && $_->{_class};
+		$_ = $self->_database->_connection->collapse($_);
 	}
 
 	if ($opts->{safe}) {
@@ -215,6 +213,10 @@ Do not use this method to update a specific document that you already
 have (i.e. after expansion). L<MongoDBx::Class::Document> has its own
 update method which is more convenient.
 
+Notice that this method doesn't collapse attributes with the
+L<Parsed|MongoDBx::Class::Meta::AttributeTraits> trait. Only the
+L<MongoDBx::Class::Document> update method performs that.
+
 =cut
 
 around 'update' => sub {
@@ -226,7 +228,7 @@ around 'update' => sub {
 	croak 'Object for update must be a hash reference (received '.ref($object).').'
 		unless ref $object eq 'HASH';
 
-	$self->_collapse_hash($criteria);
+	$self->_collapse_hash($object);
 
 	return $self->$orig($criteria, $object, $opts);
 };
@@ -234,8 +236,8 @@ around 'update' => sub {
 =head2 ensure_index( $keys, [ \%options ] )
 
 Makes sure the given keys of this collection are indexed. C<$keys> is either
-an unordered hash-ref, an ordered L<Tie::IxHash> object, or an ordered
-array reference like this:
+an unordered hash-ref, an ordered L<Tie::IxHash> object, or an ordered,
+even-numbered array reference like this:
 
 	$coll->ensure_index([ title => 1, date => -1 ])
 
@@ -266,10 +268,10 @@ sub _collapse_hash {
 
 	foreach (keys %$object) {
 		if (m/^\$/ && ref $object->{$_} eq 'HASH') {
-			# this is something like '$set', we need to collapse the values in it
-			$object->{$_} = $self->_collapse_hash($object->{$_});
+			# this is something like '$set' or '$inc', we need to collapse the values in it
+			$self->_collapse_hash($object->{$_});
 		} else {
-			$object->{$_} = $self->_database->_connection->collapse($object->{$_});
+			$object->{$_} = $self->_database->_connection->_collapse_val($object->{$_});
 		}
 	}
 }

@@ -2,9 +2,16 @@ Revision history for MongoDBx::Class
 
 {{$NEXT}}
 	- Added the _attributes method to document objects (standalone/embedded)
-	- Fixed some pod mistakes in the docs
+	- Added the ParsedAttribute role and the ParsedAttribute::DateTime class for
+	      document attributes that are automatically expanded and collapsed by MongoDBx::Class
+	- Added the Parsed attribute trait to allow setting document attributes
+	      that are parsed by ParsedAttribute classes
+	- Fixed some POD mistakes in the docs
 	- Improved the documentation a bit
 	- insert and batch_insert shouldn't enforce only inserting hash-refs
+	- Fixed bug in MongoDBx::Class::Collection->update where the wrong function argument was collapsed
+	- Fixed bug in MongoDBx::Class::Collection->find_one where searching by string OID didn't work
+	- Updated test suite with new features
 
 0.3       2010-12-26 12:15:03 Asia/Jerusalem
 	- Fixed typos, errors and mistakes in the distribution's documentation

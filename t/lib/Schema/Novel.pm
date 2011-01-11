@@ -11,6 +11,8 @@ holds_one 'author' => (is => 'ro', isa => 'Schema::PersonName', required => 1, w
 
 has 'year' => (is => 'ro', isa => 'Int', predicate => 'has_year', writer => 'set_year');
 
+has 'added' => (is => 'ro', isa => 'DateTime', traits => ['Parsed'], required => 1);
+
 holds_many 'tags' => (is => 'ro', isa => 'Schema::Tag', predicate => 'has_tags');
 
 joins_one 'synopsis' => (is => 'ro', isa => 'Synopsis', coll => 'synopsis', ref => 'novel');

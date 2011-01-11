@@ -4,6 +4,7 @@ package MongoDBx::Class::Connection;
 
 use Moose;
 use namespace::autoclean;
+use Module::Load;
 
 extends 'MongoDB::Connection';
 
@@ -190,6 +191,10 @@ sub expand {
 				$doc->{$_->name}->{_class} = $edc_name;
 				$attrs{$_->name} = $self->expand($coll_ns, $doc->{$_->name});
 			}
+		# is this an expanded attribute?
+		} elsif ($_->does('MongoDBx::Class::Meta::AttributeTraits::Parsed') && $_->parser) {
+			load $_->parser;
+			$attrs{$_->name} = $_->parser->new->expand($doc->{$_->name});
 		# just pass the value as is
 		} else {
 			next unless exists $doc->{$_->name} && defined $doc->{$_->name};
@@ -200,10 +205,10 @@ sub expand {
 	return $dc->new(%attrs);
 }
 
-=head2 collapse( $val )
+=head2 collapse( \%doc )
 
-Receives a value for a document attribute and returns it after collapsion
-so that it can be safely inserted to the database. For example, you can't
+Receives a document hash-ref and returns a collapsed version of it such
+that it can be safely inserted to the database. For example, you can't
 save an embedded document directly to the database, you need to convert
 it to a hash-ref first.
 
@@ -213,6 +218,53 @@ collapsing, it's done automatically.
 =cut
 
 sub collapse {
+	my ($self, $doc) = @_;
+
+	# return the document as is if it doesn't have a _class attribute
+	return $doc unless $doc->{_class};
+
+	# remove the schema namespace from the document class (we do not
+	# use the full package name internally) and attempt to find that
+	# document class. return the document as is if class isn't found
+	my $dc_name = $doc->{_class};
+	my $ns = $self->namespace;
+	$dc_name =~ s/^${ns}:://;
+
+	my $dc = $self->doc_classes->{$dc_name};
+
+	my $new_doc = { _class => $doc->{_class} };
+
+	foreach (keys %$doc) {
+		next if $_ eq '_class';
+
+		my $attr = $dc->meta->get_attribute($_);
+		if ($attr && $attr->does('MongoDBx::Class::Meta::AttributeTraits::Parsed') && $attr->parser) {
+			load $attr->parser;
+			my $parser = $attr->parser->new;
+			if (ref $doc->{$_} eq 'ARRAY') {
+				my @arr;
+				foreach my $val (@{$doc->{$_}}) {
+					push(@arr, $parser->collapse($val));
+				}
+				$new_doc->{$_} = \@arr;
+			} else {
+				$new_doc->{$_} = $parser->collapse($doc->{$_});
+			}
+		} else {
+			$new_doc->{$_} = $self->_collapse_val($doc->{$_});
+		}
+	}
+
+	return $new_doc;
+}
+
+=head1 INTERNAL METHODS
+
+=head2 _collapse_val( $val )
+
+=cut
+
+sub _collapse_val {
 	my ($self, $val) = @_;
 
 	if (ref $val eq 'ARRAY') {
@@ -241,7 +293,7 @@ sub collapse {
 	} elsif (blessed $val && $val->does('MongoDBx::Class::EmbeddedDocument')) {
 		my $hash = {};
 		foreach my $ha (keys %$val) {
-			next if $ha eq '_collection';
+			next if $ha eq '_collection' || $ha eq '_class';
 			$hash->{$ha} = $val->{$ha};
 		}
 		return $hash;
