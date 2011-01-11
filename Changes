@@ -1,6 +1,8 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+
+0.4       2011-01-11 22:25:54 Asia/Jerusalem
 	- Added the _attributes method to document objects (standalone/embedded)
 	- Added the ParsedAttribute role and the ParsedAttribute::DateTime class for
 	      document attributes that are automatically expanded and collapsed by MongoDBx::Class
