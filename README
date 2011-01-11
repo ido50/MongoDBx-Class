@@ -179,17 +179,16 @@ OBJECT METHODS
     Initiates a new connection to a MongoDB server running on a certain host
     and listening to a certain port. If a host is not provided, 'localhost'
     is used. If a port is not provided, 27017 (MongoDB's default port) is
-    used. The database name is required.
+    used. The database name is required. The created MongoDBx::Connection
+    object is both returned, and also saved in the calling object's 'conn'
+    attribute.
 
 INTERNAL METHODS
     The following methods are only to be used internally.
 
   BUILD()
     Automatically called when creating a new instance of this module. This
-    simply calls "_load_schema()".
-
-  _load_schema()
-    Loads the schema and saves a hash-ref of document classes found in the
+    loads the schema and saves a hash-ref of document classes found in the
     object. Automatic loading courtesy of Module::Pluggable.
 
 TODO
@@ -200,10 +199,6 @@ TODO
           class names.
 
     *     Add support for the AnyMongo driver.
-
-    *     Add some automatic data type inflations which are not natively
-          supported by MongoDB. Also add an alternative to MongoDB's
-          DateTime native inflation, which doesn't support pre-epoch dates.
 
     *     Add support for document attributes which are not to be saved in
           the database.
