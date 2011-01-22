@@ -62,7 +62,7 @@ Converts a W3C datetime string to DateTime object.
 =cut
 
 sub expand {
-	$_[0]->f->parse_datetime($_[1]);
+	return eval { $_[0]->f->parse_datetime($_[1]) } || undef;
 }
 
 =head2 collapse( $dt )
@@ -72,7 +72,7 @@ Converts a DateTime object to a W3C datetime string.
 =cut
 
 sub collapse {
-	$_[0]->f->format_datetime($_[1]);
+	return eval { $_[0]->f->format_datetime($_[1]) } || undef;
 }
 
 =head1 AUTHOR
