@@ -260,7 +260,7 @@ sub connect {
 	$opts{host} ||= 'localhost';
 	$opts{port} ||= 27017;
 	$opts{namespace} = $self->namespace;
-	$opts{doc_classes} = $self->doc_classes
+	$opts{doc_classes} = $self->doc_classes;
 
 	my $conn = MongoDBx::Class::Connection->new(%opts);
 
