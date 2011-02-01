@@ -5,6 +5,7 @@ Revision history for MongoDBx::Class
 	  is now evaled to prevent dies
 	- The argumented version of the update() method in MongoDBx::Class::Moose
 	  now also updates the document object with the new changes
+	- Updated test to reflect above change
 
 0.4       2011-01-11 22:25:54 Asia/Jerusalem
 	- Added the _attributes method to document objects (standalone/embedded)

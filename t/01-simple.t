@@ -98,14 +98,14 @@ SKIP: {
 		is($avg_score, 3, 'average score correct');
 
 		$novel->update({ year => 1915, 'author.middle_name' => 'Xoxa' });
+		is($novel->year, 1915, "novel's year successfully changed");
+		is($novel->author->middle_name, 'Xoxa', "author's middle name successfully changed");
 
 		is_deeply([$novel->_attributes], [qw/_id added author related_novels tags title year/], '_attributes okay');
 		is_deeply([$novel->author->_attributes], [qw/first_name last_name middle_name/], 'embedded _attributes okay');
 
 		my $found_novel = $db->novels->find_one($novel->id);
 		is($found_novel->reviews->count, 3, 'joins_many works correctly');
-		is($found_novel->year, 1915, "novel's year successfully changed");
-		is($found_novel->author->middle_name, 'Xoxa', "author's middle name successfully changed");
 
 		$found_novel->set_year(1914);
 		$found_novel->author->set_middle_name('Conan');
