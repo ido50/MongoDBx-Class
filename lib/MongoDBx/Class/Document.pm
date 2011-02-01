@@ -153,7 +153,26 @@ sub update {
 		my $doc = $self->_connection->collapse($_[0]);
 		delete $doc->{_class};
 
+		# update the database entry
 		$self->_collection->update({ _id => $self->_id }, { '$set' => $doc }, $_[1]);
+
+		# update the object itself
+		foreach ($self->meta->get_all_attributes) {
+			my $name = $_->name;
+			next if $name eq '_collection' || $name eq '_class';
+
+			$name =~ s/^_// if ($_->{isa} eq 'MongoDBx::Class::CoercedReference' ||
+					    $_->{isa} eq 'ArrayOfMongoDBx::Class::CoercedReference' ||
+					    ($_->documentation && $_->documentation eq 'MongoDBx::Class::EmbeddedDocument')
+					   );
+
+			# we need to use the set_value() method of Moose::Meta::Attribute
+			# to change the value of the attribute for this object,
+			# since the attribute might be read-only without a writer method.
+			# we're only doing this if the hash passed to the update() method
+			# has this attribute.
+			$_->set_value($self, $_[0]->{$name}) if exists $_[0]->{$name};
+		}
 	} else {
 		my $doc = { _class => $self->_class };
 		foreach ($self->meta->get_all_attributes) {

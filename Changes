@@ -1,8 +1,10 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
-	- MongoDBx::Class::ParsedAttribute::DateTime uses Try::Tiny to parse
-	  dates to prevent dies in apps
+	- DateTime inflation/deflation in MongoDBx::Class::ParsedAttribute::DateTime
+	  is now evaled to prevent dies
+	- The argumented version of the update() method in MongoDBx::Class::Moose
+	  now also updates the document object with the new changes
 
 0.4       2011-01-11 22:25:54 Asia/Jerusalem
 	- Added the _attributes method to document objects (standalone/embedded)
