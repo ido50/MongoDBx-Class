@@ -1,6 +1,8 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+
+0.6       2011-02-01 23:28:29 Asia/Jerusalem
 	- MongoDBx::Class's connect() method now takes all the parameters
 	  that MongoDB::Collection's new() method takes, so we can use
 	  authentication and other MongoDB options. We can also define a
