@@ -4,6 +4,7 @@ package MongoDBx::Class::Document;
 
 use Moose::Role;
 use namespace::autoclean;
+use Carp;
 
 =head1 NAME
 
@@ -157,28 +158,14 @@ sub update {
 		$self->_collection->update({ _id => $self->_id }, { '$set' => $doc }, $_[1]);
 
 		# update the object itself
-		foreach ($self->meta->get_all_attributes) {
-			my $name = $_->name;
-			next if $name eq '_collection' || $name eq '_class';
-
-			$name =~ s/^_// if ($_->{isa} eq 'MongoDBx::Class::CoercedReference' ||
-					    $_->{isa} eq 'ArrayOfMongoDBx::Class::CoercedReference' ||
-					    ($_->documentation && $_->documentation eq 'MongoDBx::Class::EmbeddedDocument')
-					   );
-
-			# we need to use the set_value() method of Moose::Meta::Attribute
-			# to change the value of the attribute for this object,
-			# since the attribute might be read-only without a writer method.
-			# we're only doing this if the hash passed to the update() method
-			# has this attribute.
-			$_->set_value($self, $_[0]->{$name}) if exists $_[0]->{$name};
-		}
+		$self->_update_self;
 	} else {
 		my $doc = { _class => $self->_class };
 		foreach ($self->meta->get_all_attributes) {
 			my $name = $_->name;
 			next if $name eq '_collection' || $name eq '_class';
 			my $val = $self->$name;
+			next unless defined $val;
 
 			$name =~ s/^_// if ($_->{isa} eq 'MongoDBx::Class::CoercedReference' ||
 					    $_->{isa} eq 'ArrayOfMongoDBx::Class::CoercedReference' ||
@@ -254,6 +241,33 @@ sub _attributes {
 	}
 
 	return sort @names;
+}
+
+=head1 INTERNAL METHODS
+
+The following methods are only to be used internally.
+
+=head2 _update_self()
+
+Used by the C<update( \%changes )> method to update the object instance
+with the new values.
+
+=cut
+
+sub _update_self {
+	my $self = shift;
+
+	my $new_version = $self->_collection->find_one({ _id => $self->_id });
+	unless ($new_version) {
+		# huh?! we didn't find the document?!@? lets warn but not die
+		carp "Can't find document after update, object instance will remain unchanged.";
+		return;
+	}
+
+	foreach ($self->meta->get_all_attributes) {
+		my $new_val = $_->get_value($new_version);
+		$_->set_value($self, $new_val) if defined $new_val;
+	}
 }
 
 =head1 AUTHOR
