@@ -1,6 +1,8 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+
+0.5       2011-02-01 21:10:25 Asia/Jerusalem
 	- DateTime inflation/deflation in MongoDBx::Class::ParsedAttribute::DateTime
 	  is now evaled to prevent dies
 	- The argumented version of the update() method in MongoDBx::Class::Moose
