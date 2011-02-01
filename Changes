@@ -1,6 +1,10 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+	- MongoDBx::Class's connect() method now takes all the parameters
+	  that MongoDB::Collection's new() method takes, so we can use
+	  authentication and other MongoDB options. We can also define a
+	  safe connection with the 'safe' option.
 
 0.5       2011-02-01 21:10:25 Asia/Jerusalem
 	- DateTime inflation/deflation in MongoDBx::Class::ParsedAttribute::DateTime

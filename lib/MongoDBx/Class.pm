@@ -51,7 +51,7 @@ MongoDBx::Class - Flexible ORM for MongoDB databases
 	$dbx->connect(host => 'localhost', port => 27017);
 
 	# be safe by default
-	$dbx->conn->safe(1);
+	$dbx->conn->safe(1); # we could've also just passed "safe => 1" to $dbx->connect() above
 
 	# get a MongoDB database
 	my $db = $dbx->conn->get_database('people');
@@ -241,14 +241,16 @@ connection to a MongoDB server is made yet.
 
 =head1 OBJECT METHODS
 
-=head2 connect( [ host => $host, [ port => $port ] ] )
+=head2 connect( %options )
 
 Initiates a new connection to a MongoDB server running on a certain host
-and listening to a certain port. If a host is not provided, 'localhost'
+and listening to a certain port. C<%options> is the hash of attributes
+that can be passed to C<new()> in L<MongoDB::Connection>, plus the 'safe'
+attribute from L<MongoDBx::Class::Connection>. You're mostly expected to
+provide the 'host' and 'port' options. If a host is not provided, 'localhost'
 is used. If a port is not provided, 27017 (MongoDB's default port) is
-used. The database name is required. The created L<MongoDBx::Connection>
-object is both returned, and also saved in the calling object's 'conn'
-attribute.
+used. The created L<MongoDBx::Class::Connection> object is returned and
+also saved as the calling object's 'conn' attribute.
 
 =cut
 
@@ -257,8 +259,10 @@ sub connect {
 
 	$opts{host} ||= 'localhost';
 	$opts{port} ||= 27017;
+	$opts{namespace} = $self->namespace;
+	$opts{doc_classes} = $self->doc_classes
 
-	my $conn = MongoDBx::Class::Connection->new(host => $opts{host}, port => $opts{port}, namespace => $self->namespace, doc_classes => $self->doc_classes);
+	my $conn = MongoDBx::Class::Connection->new(%opts);
 
 	$self->_set_conn($conn);
 
