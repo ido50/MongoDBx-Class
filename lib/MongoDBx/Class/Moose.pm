@@ -69,7 +69,7 @@ provides, and so is to replace C<use Moose> when creating document classes.
 =cut
 
 Moose::Exporter->setup_import_methods(
-	with_meta => [ 'belongs_to', 'has_one', 'has_many', 'holds_one', 'holds_many', 'joins_one', 'joins_many' ],
+	with_meta => [ 'belongs_to', 'has_one', 'has_many', 'holds_one', 'holds_many', 'defines_many', 'joins_one', 'joins_many' ],
 	also      => 'Moose',
 );
 
