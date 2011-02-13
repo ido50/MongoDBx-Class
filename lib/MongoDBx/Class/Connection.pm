@@ -186,6 +186,23 @@ sub expand {
 					$a->{_class} = $edc_name;
 					push(@{$attrs{$_->name}}, $self->expand($coll_ns, $a));
 				}
+			} elsif ($_->{isa} =~ m/^HashRef/) {
+				my $name = $_->name;
+				$name =~ s!^_!!;
+				
+				$edc_name =~ s/^HashRef\[//;
+				$edc_name =~ s/\[$//;
+
+				next unless exists $doc->{$name} &&
+					    defined $doc->{$name} && 
+					    ref $doc->{$name} eq 'HASH';
+				
+				$attrs{$_->name} = {};
+				
+				foreach my $key (keys %{$doc->{$name}}) {
+					$doc->{$name}->{$key}->{_class} = $edc_name;
+					$attrs{$_->name}->{$key} = $self->expand($coll_ns, $doc->{$name}->{$key});
+				}
 			} else {
 				next unless exists $doc->{$_->name} && defined $doc->{$_->name};
 				$doc->{$_->name}->{_class} = $edc_name;
@@ -269,7 +286,18 @@ sub collapse {
 sub _collapse_val {
 	my ($self, $val) = @_;
 
-	if (ref $val eq 'ARRAY') {
+	if (blessed $val && $val->isa('MongoDBx::Class::Reference')) {
+		return { '$ref' => $val->ref_coll, '$id' => $val->ref_id };
+	} elsif (blessed $val && $val->does('MongoDBx::Class::Document')) {
+		return { '$ref' => $val->_collection->name, '$id' => $val->_id };
+	} elsif (blessed $val && $val->does('MongoDBx::Class::EmbeddedDocument')) {
+		my $hash = {};
+		foreach my $ha (keys %$val) {
+			next if $ha eq '_collection' || $ha eq '_class';
+			$hash->{$ha} = $val->{$ha};
+		}
+		return $hash;
+	} elsif (ref $val eq 'ARRAY') {
 		my @arr;
 		foreach (@$val) {
 			if (blessed $_ && $_->isa('MongoDBx::Class::Reference')) {
@@ -288,17 +316,25 @@ sub _collapse_val {
 			}
 		}
 		return \@arr;
-	} elsif (blessed $val && $val->isa('MongoDBx::Class::Reference')) {
-		return { '$ref' => $val->ref_coll, '$id' => $val->ref_id };
-	} elsif (blessed $val && $val->does('MongoDBx::Class::Document')) {
-		return { '$ref' => $val->_collection->name, '$id' => $val->_id };
-	} elsif (blessed $val && $val->does('MongoDBx::Class::EmbeddedDocument')) {
-		my $hash = {};
-		foreach my $ha (keys %$val) {
-			next if $ha eq '_collection' || $ha eq '_class';
-			$hash->{$ha} = $val->{$ha};
+	} elsif (ref $val eq 'HASH') {
+		my $h = {};
+		foreach (keys %$val) {
+			if (blessed $val->{$_} && $val->{$_}->isa('MongoDBx::Class::Reference')) {
+				$h->{$_} = { '$ref' => $val->{$_}->ref_coll, '$id' => $val->{$_}->ref_id };
+			} elsif (blessed $val->{$_} && $val->{$_}->does('MongoDBx::Class::Document')) {
+				$h->{$_} = { '$ref' => $val->{$_}->_collection->name, '$id' => $val->{$_}->_id };
+			} elsif (blessed $val->{$_} && $val->{$_}->does('MongoDBx::Class::EmbeddedDocument')) {
+				my $hash = {};
+				foreach my $ha (keys %{$val->{$_}}) {
+					next if $ha eq '_collection';
+					$hash->{$ha} = $val->{$_}->{$ha};
+				}
+				$h->{$_} = $hash;
+			} else {
+				$h->{$_} = $val->{$_};
+			}
 		}
-		return $hash;
+		return $h;
 	}
 
 	return $val;

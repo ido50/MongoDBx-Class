@@ -1,6 +1,8 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+	- Added the defines_many relationship type that helps embedding
+	  documents within a hash reference.
 
 0.6       2011-02-01 23:28:29 Asia/Jerusalem
 	- MongoDBx::Class's connect() method now takes all the parameters

@@ -239,6 +239,52 @@ sub holds_many {
 	});
 }
 
+=head2 defines_many
+
+Specifies that the document has an attribute which holds a hash (a.k.a
+associative array or dictionary) of embedded documents in their entirety.
+These embedded documents are represented by a class that C<does>
+L<MongoDBx::Class::EmbeddedDocument>.
+
+	defines_many 'things' => (is => 'ro', isa => 'MyApp::Schema::Thing', predicate => 'has_things');
+
+When calling C<things()> on a document, a hash-ref is returned (not a hash!).
+
+Like C<holds_many> and C<holds_one>, this relationship has the unfortunate
+constraint of having to pass the full package name of the foreign document
+(e.g. MyApp::Schema::Thing above), whereas other relationship types
+require the class name only (e.g. Novel).
+
+In the database, this relationship is represented in the referencing (i.e.
+holding) document like this:
+
+	{ ...
+	  things => {
+		"mine" => { _class => 'MyApp::Schema::Thing', ... },
+		"his" => { _class => 'MyApp::Schema::Thing', ... },
+		"hers" => { _class => 'MyApp::Schema::Thing', ... },
+	  }
+	  ...
+	}
+
+=cut
+
+sub defines_many {
+	my ($meta, $name, %opts) = @_;
+
+	$opts{isa} = "HashRef[$opts{isa}]";
+	$opts{documentation} = 'MongoDBx::Class::EmbeddedDocument';
+
+	$meta->add_attribute('_'.$name => %opts);
+	$meta->add_method($name => sub {
+		my $self = shift;
+
+		my $attr = '_'.$name;
+
+		return $self->$attr || {};
+	});
+}
+
 =head2 joins_one
 
 Specifies that the document is referenced by one other document. The reference
