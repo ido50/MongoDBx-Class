@@ -111,7 +111,7 @@ sub expand {
 	my $coll = $self->get_database($db_name)->get_collection($coll_name);
 
 	# return the document as is if it doesn't have a _class attribute
-	return $doc unless exists $doc->{_class};
+	return $doc unless $doc->{_class};
 
 	# remove the schema namespace from the document class (we do not
 	# use the full package name internally) and attempt to find that
@@ -291,12 +291,7 @@ sub _collapse_val {
 	} elsif (blessed $val && $val->does('MongoDBx::Class::Document')) {
 		return { '$ref' => $val->_collection->name, '$id' => $val->_id };
 	} elsif (blessed $val && $val->does('MongoDBx::Class::EmbeddedDocument')) {
-		my $hash = {};
-		foreach my $ha (keys %$val) {
-			next if $ha eq '_collection' || $ha eq '_class';
-			$hash->{$ha} = $val->{$ha};
-		}
-		return $hash;
+		return $val->as_hashref;
 	} elsif (ref $val eq 'ARRAY') {
 		my @arr;
 		foreach (@$val) {
@@ -305,12 +300,7 @@ sub _collapse_val {
 			} elsif (blessed $_ && $_->does('MongoDBx::Class::Document')) {
 				push(@arr, { '$ref' => $_->_collection->name, '$id' => $_->_id });
 			} elsif (blessed $_ && $_->does('MongoDBx::Class::EmbeddedDocument')) {
-				my $hash = {};
-				foreach my $ha (keys %$_) {
-					next if $ha eq '_collection';
-					$hash->{$ha} = $_->{$ha};
-				}
-				push(@arr, $hash);
+				push(@arr, $_->as_hashref);
 			} else {
 				push(@arr, $_);
 			}
@@ -324,12 +314,7 @@ sub _collapse_val {
 			} elsif (blessed $val->{$_} && $val->{$_}->does('MongoDBx::Class::Document')) {
 				$h->{$_} = { '$ref' => $val->{$_}->_collection->name, '$id' => $val->{$_}->_id };
 			} elsif (blessed $val->{$_} && $val->{$_}->does('MongoDBx::Class::EmbeddedDocument')) {
-				my $hash = {};
-				foreach my $ha (keys %{$val->{$_}}) {
-					next if $ha eq '_collection';
-					$hash->{$ha} = $val->{$_}->{$ha};
-				}
-				$h->{$_} = $hash;
+				$h->{$_} = $val->{$_}->as_hashref;
 			} else {
 				$h->{$_} = $val->{$_};
 			}

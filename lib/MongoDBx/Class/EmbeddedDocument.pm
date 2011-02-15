@@ -72,6 +72,24 @@ has '_class' => (is => 'ro', isa => 'Str', required => 1);
 
 The following methods are provided:
 
+=head2 as_hashref()
+
+Returns the embedded document as a hash reference, without the _collection
+and _class attributes (if they exist).
+
+=cut
+
+sub as_hashref {
+	my ($self, $hash) = (shift, {});
+
+	foreach my $ha (keys %$self) {
+		next if $ha eq '_collection' || $ha eq '_class';
+		$hash->{$ha} = $self->{$ha};
+	}
+
+	return $hash;
+}
+
 =head2 _database()
 
 Convenience shortcut for running C<< $embd_doc->_collection->_database >>.
