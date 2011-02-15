@@ -191,7 +191,7 @@ sub expand {
 				$name =~ s!^_!!;
 				
 				$edc_name =~ s/^HashRef\[//;
-				$edc_name =~ s/\[$//;
+				$edc_name =~ s/\]$//;
 
 				next unless exists $doc->{$name} &&
 					    defined $doc->{$name} && 
