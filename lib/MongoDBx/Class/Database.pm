@@ -18,7 +18,7 @@ L<MongoDB::Database>
 =head1 SYNOPSIS
 
 	# get a database object from your connection object
-	my $db = $dbx->conn->get_database($db_name); # or simply $dbx->conn->$db_name
+	my $db = $conn->get_database($db_name); # or simply $conn->$db_name
 
 =head1 DESCRIPTION
 
@@ -85,7 +85,7 @@ L<MongoDBx::Class::Connection>, L<MongoDB::Database>.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010 Ido Perlmuter.
+Copyright 2010-2011 Ido Perlmuter.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

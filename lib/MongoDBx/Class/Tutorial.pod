@@ -400,20 +400,35 @@ and will return a L<MongoDBx::Class> object back.
 
 We then initiate a connection to a server:
 
-	$dbx->connect();
+	my $conn = $dbx->connect();
 
 We don't pass anything to the C<connect()> method, so it attempts to connect
 to a MongoDB server running on 'localhost', on the default 27017 port. We
 can connect to a specific server like so:
 
-	$dbx->connect(host => $host, port => $port);
+	my $conn = $dbx->connect(host => $host, port => $port);
 
-While the C<connect()> method returns a L<MongoDBx::Class::Connection>
-object, we do not use it directly. The method also stores that object in
-the MongoDBx::Class object (C<$dbx> above) itself as the 'conn attribute,
-and we're supposed to use it from there.
+The connect method accepts any of the options that the C<new()> method in
+L<MongoDB::Connection> accepts, plus the new 'safe' boolean attribute.
+Passing a true value for this attribute causes MongoDBx::Class to automatically
+enable the 'pass' option to all insert/update/delete operations performed
+on the database, so we don't need to pass C<< { safe => 1 } >> to the
+C<insert()>, C<update()> methods, etc. The safe option is actually required
+in order to autoamtically expand/collapse documents, so you'd probably
+want to enable it, but it is kept disabled by default for compatibility
+with the original MongoDB module.
 
-	$dbx->conn->get_database('whatever');
+The C<connect()> method returns a L<MongoDBx::Class::Connection>
+object.
+
+NOTE: versions prior to 0.7 stored the returned connection object as the
+'conn' attribute of the C<$dbx> variable. This behavior has been dropped
+in version 0.7 in order to be consistent with L<MongoDB> and allowing
+multiple connections.
+
+Now that we have our connection object, we can get a database object:
+
+	$conn->get_database('whatever'); # also simply $conn->whatever
 
 =head1 INSERTING DOCUMENTS
 
@@ -423,18 +438,11 @@ direct L<MongoDB> usage, as MonogDBx::Class simply extends MongoDB. The
 biggest difference between directly using MongoDB and using MongoDBx::Class,
 is the automatic expanding and collapsing of documents. Documents are
 automatically expanded when inserting documents only if the C<safe> option
-is on. By default, MongoDB performs unsafe operations. MongoDBx::Class
-adds the ability to use safe operations by default. Lets activate it first:
-
-	$dbx->conn->safe(1);
-
-Now we don't need to pass C<< { safe => 1 } >> to our C<insert>s, C<update>s
-and other operations. If you're doing mostly safe operations, but need to
-do unsafe operations from time to time, you can pass C<< { safe => 0 } >>.
+is on, as mentioned in the previous section.
 
 Lets create a novel document:
 
-	my $db = $dbx->conn->get_database('myapp');
+	my $db = $conn->get_database('myapp');
 	my $novels_coll = $db->get_collection('novels');
 	
 	my $novel = $novels_coll->insert({
@@ -482,7 +490,7 @@ object for us.
 
 Now for our reviews:
 
-	my @reviews = $dbx->conn->get_collection('reviews')->batch_insert([
+	my @reviews = $conn->get_collection('reviews')->batch_insert([
 		{
 			_class => 'Review',
 			novel => $novel,
@@ -653,8 +661,8 @@ to remove multiple documents:
 Yes, you can use as many databases as you like and use the same document
 classes across them:
 
-	my $data_db = $dbx->conn->get_database('myapp_data');
-	my $user_db = $dbx->conn->get_database('myapp_users');
+	my $data_db = $conn->get_database('myapp_data');
+	my $user_db = $conn->get_database('myapp_users');
 
 =head2 Can I define different document classes to different databases?
 
@@ -710,7 +718,7 @@ L<MongoDBx::Class>, L<MongoDB>, L<http://www.mongodb.org/>.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010 Ido Perlmuter.
+Copyright 2010-2011 Ido Perlmuter.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

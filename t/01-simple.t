@@ -1,4 +1,4 @@
-#!perl -T
+#!perl
 
 use strict;
 use warnings;
@@ -20,14 +20,15 @@ SKIP: {
 	is(scalar(keys %{$dbx->doc_classes}), 5, 'successfully loaded schema');
 
 	SKIP: {
-		eval { $dbx->connect };
+		my $conn;
+		eval { $conn = $dbx->connect };
 
 		skip "Can't connect to MongoDB server", 19 if $@;
 
-		$dbx->conn->safe(1);
-		is($dbx->conn->safe, 1, "Using safe operations by default");
+		$conn->safe(1);
+		is($conn->safe, 1, "Using safe operations by default");
 
-		my $db = $dbx->conn->get_database('mongodbx_class_test');
+		my $db = $conn->get_database('mongodbx_class_test');
 		my $novels_coll = $db->get_collection('novels');
 
 		$novels_coll->ensure_index([ title => 1, year => -1 ]);

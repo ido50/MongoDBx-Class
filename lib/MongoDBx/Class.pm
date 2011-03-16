@@ -48,13 +48,13 @@ MongoDBx::Class - Flexible ORM for MongoDB databases
 	my $dbx = MongoDBx::Class->new(namespace => 'MyApp::Model::DB');
 
 	# connect to a MongoDB server
-	$dbx->connect(host => 'localhost', port => 27017);
+	my $conn = $dbx->connect(host => 'localhost', port => 27017);
 
 	# be safe by default
-	$dbx->conn->safe(1); # we could've also just passed "safe => 1" to $dbx->connect() above
+	$conn->safe(1); # we could've also just passed "safe => 1" to $dbx->connect() above
 
 	# get a MongoDB database
-	my $db = $dbx->conn->get_database('people');
+	my $db = $conn->get_database('people');
 
 	# insert a person
 	my $person = $db->insert({ name => 'Some Guy', birth_date => '1984-06-12', _class => 'Person' });
@@ -67,7 +67,8 @@ MongoDBx::Class - Flexible ORM for MongoDB databases
 
 =head1 DESCRIPTION
 
-WARNING: THIS IS ALPHA SOFTWARE.
+WARNING: MongoDBx::Class is still in beta status. Please do not rely on
+it yet for production use.
 
 L<MongoDBx::Class> is a flexible object relational mapper (ORM) for
 L<MongoDB> databases. Given a schema-like collection of document classes,
@@ -210,8 +211,6 @@ It also contains a list of frequently asked questions.
 
 has 'namespace' => (is => 'ro', isa => 'Str', required => 1);
 
-has 'conn' => (is => 'ro', isa => 'MongoDB::Connection', predicate => 'is_connected', writer => '_set_conn', clearer => '_clear_conn');
-
 has 'doc_classes' => (is => 'ro', isa => 'HashRef', default => sub { {} });
 
 =head2 namespace
@@ -220,12 +219,6 @@ A string representing the namespace of the MongoDB schema used (e.g.
 C<MyApp::Schema>). Your document classes, structurally speaking, should be
 descendants of this namespace (e.g. C<MyApp::Schema::Article>,
 C<MyApp::Schema::Post>).
-
-=head2 conn
-
-The object's connection to a MongoDB server. This is a L<MongoDBx::Class::Connection>
-object (which extends L<MongoDB::Connection>). This is set only after the
-C<connect()> method is called.
 
 =head2 doc_classes
 
@@ -249,24 +242,22 @@ that can be passed to C<new()> in L<MongoDB::Connection>, plus the 'safe'
 attribute from L<MongoDBx::Class::Connection>. You're mostly expected to
 provide the 'host' and 'port' options. If a host is not provided, 'localhost'
 is used. If a port is not provided, 27017 (MongoDB's default port) is
-used. The created L<MongoDBx::Class::Connection> object is returned and
-also saved as the calling object's 'conn' attribute.
+used. Returns a L<MongoDBx::Class::Connection> object.
+
+NOTE: Since version 0.7, the created connection object isn't saved in the
+top MongoDBx::Class object, but only returned, in order to be more like how
+connection is made in L<MongoDB> (and to allow multiple connections). This
+change breaks backwords compatibility.
 
 =cut
 
 sub connect {
 	my ($self, %opts) = @_;
 
-	$opts{host} ||= 'localhost';
-	$opts{port} ||= 27017;
 	$opts{namespace} = $self->namespace;
 	$opts{doc_classes} = $self->doc_classes;
 
-	my $conn = MongoDBx::Class::Connection->new(%opts);
-
-	$self->_set_conn($conn);
-
-	return $conn;
+	return MongoDBx::Class::Connection->new(%opts);
 }
 
 =head1 INTERNAL METHODS
@@ -360,7 +351,7 @@ me in writing MongoDBx::Class.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010 Ido Perlmuter.
+Copyright 2010-2011 Ido Perlmuter.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

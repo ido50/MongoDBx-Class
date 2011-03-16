@@ -1,9 +1,16 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+	- Changed the way database connection is made to be more like
+	  in the original MongoDB driver (there was no reason to do it differently,
+	  this change breaks backwords compatibility though)
 	- Added the defines_many relationship type that helps embedding
 	  documents within a hash reference.
 	- Added the as_hashref() method to embedded documents.
+	- Removed the -T option from the shebang line in 01-simple.t as
+	  it seems like it causes the whole module finding problems (though
+	  I could be wrong)
+	- Status updated from alpha to beta
 
 0.6       2011-02-01 23:28:29 Asia/Jerusalem
 	- MongoDBx::Class's connect() method now takes all the parameters

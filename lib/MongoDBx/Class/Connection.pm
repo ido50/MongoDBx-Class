@@ -19,12 +19,12 @@ L<MongoDB::Connection>
 =head1 SYNOPSIS
 
 	# connect to a MongoDB server
-	$mongodbx->connect(host => '10.10.10.10', port => 27017);
+	my $conn = $mongodbx->connect(host => '10.10.10.10', port => 27017);
 
 	# the connection object is automatically saved to the 'conn'
 	# attribute of the L<MongoDBx::Class> object (C<$mongodbx> above)
 
-	$mongodbx->conn->get_database('people');
+	$conn->get_database('people');
 
 =head1 DESCRIPTION
 
@@ -369,7 +369,7 @@ L<MongoDBx::Class>, L<MongoDB::Connection>.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010 Ido Perlmuter.
+Copyright 2010-2011 Ido Perlmuter.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
