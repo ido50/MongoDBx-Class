@@ -1,6 +1,8 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+
+0.7       2011-03-17 00:48:50 Asia/Jerusalem
 	- Changed the way database connection is made to be more like
 	  in the original MongoDB driver (there was no reason to do it differently,
 	  this change breaks backwords compatibility though)
