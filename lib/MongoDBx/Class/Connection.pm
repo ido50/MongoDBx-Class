@@ -314,9 +314,9 @@ sub _collapse_val {
 		foreach (keys %$val) {
 			if (blessed $val->{$_} && $val->{$_}->isa('MongoDBx::Class::Reference')) {
 				$h->{$_} = { '$ref' => $val->{$_}->ref_coll, '$id' => $val->{$_}->ref_id };
-			} elsif (blessed $val->{$_} && $_->can('does') && $val->{$_}->does('MongoDBx::Class::Document')) {
+			} elsif (blessed $val->{$_} && $val->{$_}->can('does') && $val->{$_}->does('MongoDBx::Class::Document')) {
 				$h->{$_} = { '$ref' => $val->{$_}->_collection->name, '$id' => $val->{$_}->_id };
-			} elsif (blessed $val->{$_} && $_->can('does') && $val->{$_}->does('MongoDBx::Class::EmbeddedDocument')) {
+			} elsif (blessed $val->{$_} && $val->{$_}->can('does') && $val->{$_}->does('MongoDBx::Class::EmbeddedDocument')) {
 				$h->{$_} = $val->{$_}->as_hashref;
 			} else {
 				$h->{$_} = $val->{$_};
