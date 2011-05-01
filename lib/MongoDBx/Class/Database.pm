@@ -2,7 +2,7 @@ package MongoDBx::Class::Database;
 
 # ABSTRACT: A MongoDBx::Class database object
 
-our $VERSION = "0.7001";
+our $VERSION = "0.8";
 $VERSION = eval $VERSION;
 
 use Moose;

@@ -2,7 +2,7 @@ package MongoDBx::Class::Reference;
 
 # ABSTRACT: An embedded document representing a reference to a different document (thus establishing a relationship)
 
-our $VERSION = "0.7001";
+our $VERSION = "0.8";
 $VERSION = eval $VERSION;
 
 use Moose;
