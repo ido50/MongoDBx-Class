@@ -2,6 +2,9 @@ package MongoDBx::Class::Moose;
 
 # ABSTRACT: Extends Moose with common relationships for MongoDBx::Class documents
 
+our $VERSION = "0.7001";
+$VERSION = eval $VERSION;
+
 use Moose ();
 use Moose::Exporter;
 

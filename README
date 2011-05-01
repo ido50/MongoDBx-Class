@@ -8,13 +8,13 @@ SYNOPSIS
             my $dbx = MongoDBx::Class->new(namespace => 'MyApp::Model::DB');
 
             # connect to a MongoDB server
-            $dbx->connect(host => 'localhost', port => 27017);
+            my $conn = $dbx->connect(host => 'localhost', port => 27017);
 
             # be safe by default
-            $dbx->conn->safe(1); # we could've also just passed "safe => 1" to $dbx->connect() above
+            $conn->safe(1); # we could've also just passed "safe => 1" to $dbx->connect() above
 
             # get a MongoDB database
-            my $db = $dbx->conn->get_database('people');
+            my $db = $conn->get_database('people');
 
             # insert a person
             my $person = $db->insert({ name => 'Some Guy', birth_date => '1984-06-12', _class => 'Person' });
@@ -26,7 +26,8 @@ SYNOPSIS
             $person->delete;
 
 DESCRIPTION
-    WARNING: THIS IS ALPHA SOFTWARE.
+    WARNING: MongoDBx::Class is still in beta status. Please do not rely on
+    it yet for production use.
 
     MongoDBx::Class is a flexible object relational mapper (ORM) for MongoDB
     databases. Given a schema-like collection of document classes,
@@ -160,11 +161,6 @@ ATTRIBUTES
     be descendants of this namespace (e.g. "MyApp::Schema::Article",
     "MyApp::Schema::Post").
 
-  conn
-    The object's connection to a MongoDB server. This is a
-    MongoDBx::Class::Connection object (which extends MongoDB::Connection).
-    This is set only after the "connect()" method is called.
-
   doc_classes
     A hash-ref of document classes found when loading the schema.
 
@@ -182,8 +178,12 @@ OBJECT METHODS
     attribute from MongoDBx::Class::Connection. You're mostly expected to
     provide the 'host' and 'port' options. If a host is not provided,
     'localhost' is used. If a port is not provided, 27017 (MongoDB's default
-    port) is used. The created MongoDBx::Class::Connection object is
-    returned and also saved as the calling object's 'conn' attribute.
+    port) is used. Returns a MongoDBx::Class::Connection object.
+
+    NOTE: Since version 0.7, the created connection object isn't saved in
+    the top MongoDBx::Class object, but only returned, in order to be more
+    like how connection is made in MongoDB (and to allow multiple
+    connections). This change breaks backwords compatibility.
 
 INTERNAL METHODS
     The following methods are only to be used internally.
@@ -249,7 +249,7 @@ ACKNOWLEDGEMENTS
     in writing MongoDBx::Class.
 
 LICENSE AND COPYRIGHT
-    Copyright 2010 Ido Perlmuter.
+    Copyright 2010-2011 Ido Perlmuter.
 
     This program is free software; you can redistribute it and/or modify it
     under the terms of either: the GNU General Public License as published

@@ -2,6 +2,9 @@ package MongoDBx::Class::Document;
 
 # ABSTRACT: A MongoDBx::Class document role
 
+our $VERSION = "0.7001";
+$VERSION = eval $VERSION;
+
 use Moose::Role;
 use namespace::autoclean;
 use Carp;

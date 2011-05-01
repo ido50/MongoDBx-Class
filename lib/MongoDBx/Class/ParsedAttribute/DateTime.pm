@@ -2,6 +2,9 @@ package MongoDBx::Class::ParsedAttribute::DateTime;
 
 # ABSTRACT: An automatic DateTime parser for MongoDBx::Class document classes
 
+our $VERSION = "0.7001";
+$VERSION = eval $VERSION;
+
 use Moose;
 use namespace::autoclean;
 use DateTime::Format::W3CDTF;

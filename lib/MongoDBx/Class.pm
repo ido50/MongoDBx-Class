@@ -2,6 +2,9 @@ package MongoDBx::Class;
 
 # ABSTRACT: Flexible ORM for MongoDB databases
 
+our $VERSION = "0.7001";
+$VERSION = eval $VERSION;
+
 use Moose;
 use Moose::Util::TypeConstraints;
 use namespace::autoclean;

@@ -2,6 +2,9 @@ package MongoDBx::Class::Collection;
 
 # ABSTRACT: A MongoDBx::Class collection object
 
+our $VERSION = "0.7001";
+$VERSION = eval $VERSION;
+
 use Moose;
 use namespace::autoclean;
 use Carp;

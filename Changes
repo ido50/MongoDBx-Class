@@ -1,6 +1,9 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+	- Fixed bug causing MongoDBx::Class to fail when a document class
+	  has attributes that hold blessed values of classes that do not
+	  use Moose.
 
 0.7       2011-03-17 00:48:50 Asia/Jerusalem
 	- Changed the way database connection is made to be more like

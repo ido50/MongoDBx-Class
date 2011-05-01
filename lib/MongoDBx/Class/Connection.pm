@@ -2,6 +2,9 @@ package MongoDBx::Class::Connection;
 
 # ABSTARCT: A connection to a MongoDB server
 
+our $VERSION = "0.7001";
+$VERSION = eval $VERSION;
+
 use Moose;
 use namespace::autoclean;
 use Module::Load;
@@ -209,7 +212,7 @@ sub expand {
 				$attrs{$_->name} = $self->expand($coll_ns, $doc->{$_->name});
 			}
 		# is this an expanded attribute?
-		} elsif ($_->does('MongoDBx::Class::Meta::AttributeTraits::Parsed') && $_->parser) {
+		} elsif ($_->can('does') && $_->does('MongoDBx::Class::Meta::AttributeTraits::Parsed') && $_->parser) {
 			next unless exists $doc->{$_->name} && defined $doc->{$_->name};
 			load $_->parser;
 			my $val = $_->parser->new->expand($doc->{$_->name});
@@ -257,7 +260,7 @@ sub collapse {
 		next if $_ eq '_class';
 
 		my $attr = $dc->meta->get_attribute($_);
-		if ($attr && $attr->does('MongoDBx::Class::Meta::AttributeTraits::Parsed') && $attr->parser) {
+		if ($attr && $attr->can('does') && $attr->does('MongoDBx::Class::Meta::AttributeTraits::Parsed') && $attr->parser) {
 			load $attr->parser;
 			my $parser = $attr->parser->new;
 			if (ref $doc->{$_} eq 'ARRAY') {
@@ -288,18 +291,18 @@ sub _collapse_val {
 
 	if (blessed $val && $val->isa('MongoDBx::Class::Reference')) {
 		return { '$ref' => $val->ref_coll, '$id' => $val->ref_id };
-	} elsif (blessed $val && $val->does('MongoDBx::Class::Document')) {
+	} elsif (blessed $val && $val->can('does') && $val->does('MongoDBx::Class::Document')) {
 		return { '$ref' => $val->_collection->name, '$id' => $val->_id };
-	} elsif (blessed $val && $val->does('MongoDBx::Class::EmbeddedDocument')) {
+	} elsif (blessed $val && $val->can('does') && $val->does('MongoDBx::Class::EmbeddedDocument')) {
 		return $val->as_hashref;
 	} elsif (ref $val eq 'ARRAY') {
 		my @arr;
 		foreach (@$val) {
 			if (blessed $_ && $_->isa('MongoDBx::Class::Reference')) {
 				push(@arr, { '$ref' => $_->ref_coll, '$id' => $_->ref_id });
-			} elsif (blessed $_ && $_->does('MongoDBx::Class::Document')) {
+			} elsif (blessed $_ && $_->can('does') && $_->does('MongoDBx::Class::Document')) {
 				push(@arr, { '$ref' => $_->_collection->name, '$id' => $_->_id });
-			} elsif (blessed $_ && $_->does('MongoDBx::Class::EmbeddedDocument')) {
+			} elsif (blessed $_ && $_->can('does') && $_->does('MongoDBx::Class::EmbeddedDocument')) {
 				push(@arr, $_->as_hashref);
 			} else {
 				push(@arr, $_);
@@ -311,9 +314,9 @@ sub _collapse_val {
 		foreach (keys %$val) {
 			if (blessed $val->{$_} && $val->{$_}->isa('MongoDBx::Class::Reference')) {
 				$h->{$_} = { '$ref' => $val->{$_}->ref_coll, '$id' => $val->{$_}->ref_id };
-			} elsif (blessed $val->{$_} && $val->{$_}->does('MongoDBx::Class::Document')) {
+			} elsif (blessed $val->{$_} && $_->can('does') && $val->{$_}->does('MongoDBx::Class::Document')) {
 				$h->{$_} = { '$ref' => $val->{$_}->_collection->name, '$id' => $val->{$_}->_id };
-			} elsif (blessed $val->{$_} && $val->{$_}->does('MongoDBx::Class::EmbeddedDocument')) {
+			} elsif (blessed $val->{$_} && $_->can('does') && $val->{$_}->does('MongoDBx::Class::EmbeddedDocument')) {
 				$h->{$_} = $val->{$_}->as_hashref;
 			} else {
 				$h->{$_} = $val->{$_};
