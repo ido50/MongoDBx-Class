@@ -1,4 +1,4 @@
-package Schema::Synopsis;
+package MongoDBxTestSchema::Synopsis;
 
 use MongoDBx::Class::Moose;
 use namespace::autoclean;

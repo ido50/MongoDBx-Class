@@ -1,4 +1,4 @@
-package Schema::Tag;
+package MongoDBxTestSchema::Tag;
 
 use MongoDBx::Class::Moose;
 use namespace::autoclean;

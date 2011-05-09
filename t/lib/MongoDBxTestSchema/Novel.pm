@@ -1,4 +1,4 @@
-package Schema::Novel;
+package MongoDBxTestSchema::Novel;
 
 use MongoDBx::Class::Moose;
 use namespace::autoclean;
@@ -7,13 +7,13 @@ with 'MongoDBx::Class::Document';
 
 has 'title' => (is => 'ro', isa => 'Str', required => 1, writer => 'set_title');
 
-holds_one 'author' => (is => 'ro', isa => 'Schema::PersonName', required => 1, writer => 'set_author');
+holds_one 'author' => (is => 'ro', isa => 'MongoDBxTestSchema::PersonName', required => 1, writer => 'set_author');
 
 has 'year' => (is => 'ro', isa => 'Int', predicate => 'has_year', writer => 'set_year');
 
 has 'added' => (is => 'ro', isa => 'DateTime', traits => ['Parsed'], required => 1);
 
-holds_many 'tags' => (is => 'ro', isa => 'Schema::Tag', predicate => 'has_tags');
+holds_many 'tags' => (is => 'ro', isa => 'MongoDBxTestSchema::Tag', predicate => 'has_tags');
 
 joins_one 'synopsis' => (is => 'ro', isa => 'Synopsis', coll => 'synopsis', ref => 'novel');
 

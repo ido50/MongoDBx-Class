@@ -682,11 +682,33 @@ but support for L<AnyMongo> is planned.
 MongoDBx::Class does not provide an option like that yet, but will probably
 do so in upcoming versions.
 
-=head2 Does MongoDBx::Class provide any automatic object inflations/expansions for common classes?
+=head2 I'm not getting document objects but just the document hash-refs, what gives?
 
-No, at least not yet. Have a look at L<MongoDB::DataTypes> for a list of
-current inflations the MongoDB driver natively supports. I do plan to provide
-some inflations in future versions.
+If, either when searching for documents or creating/updating documents, you are not
+receiving expanded document objects back but only the document hash-refs
+when searching/updating, or the documents' L<MongoDB::OID>s when inserting,
+there might be a few reasons for this:
+
+=over
+
+=item 1. You are not using safe operations: MongoDBx::Class cannot expand
+documents when not using safe operations. Either enable the 'safe' option
+when inserting/updating, or enable the safe option globally when connecting
+using L<MongoDBx::Class>'s C<connect()> method.
+
+=item 2. The document hash-ref does not define the '_class' attribute:
+MongoDBx::Class cannot expand document without knowing to which document
+class the document belongs. Therefore, documents in the MongoDB database
+must have the '_class' attribute.
+
+=item 3. The '_class' attribute is wrong or does not exist: If the document
+has the '_class' attribute and you're still not getting document objects
+back, then MongoDBx::Class probably can't find the document class. This
+might be because the class name is wrong, or the class was not found when
+loading MongoDBx::Class. If that is the case, you might wanna take a look
+at the L</"search_dirs"> attribute of MongoDBx::Class.
+
+=back
 
 =head2 Who framed Roger Rabbit?
 

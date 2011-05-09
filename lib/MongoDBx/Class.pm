@@ -50,6 +50,10 @@ MongoDBx::Class - Flexible ORM for MongoDB databases
 	# create a new instance of the module and load a model schema
 	my $dbx = MongoDBx::Class->new(namespace => 'MyApp::Model::DB');
 
+	# if MongoDBx::Class can't find your model schema (possibly because
+	# it exists in some different location), you can do this:
+	my $dbx = MongoDBx::Class->new(namespace => 'MyApp::Model::DB', search_dirs => ['/path/to/model/dir']);
+
 	# connect to a MongoDB server
 	my $conn = $dbx->connect(host => 'localhost', port => 27017);
 
@@ -214,6 +218,8 @@ It also contains a list of frequently asked questions.
 
 has 'namespace' => (is => 'ro', isa => 'Str', required => 1);
 
+has 'search_dirs' => (is => 'ro', isa => 'ArrayRef[Str]', default => sub { [] });
+
 has 'doc_classes' => (is => 'ro', isa => 'HashRef', default => sub { {} });
 
 =head2 namespace
@@ -222,6 +228,12 @@ A string representing the namespace of the MongoDB schema used (e.g.
 C<MyApp::Schema>). Your document classes, structurally speaking, should be
 descendants of this namespace (e.g. C<MyApp::Schema::Article>,
 C<MyApp::Schema::Post>).
+
+=head2 search_dirs
+
+An array-ref of directories in which to search for the document classes.
+Not required, useful if for some reason MongoDBx::Class can't find
+your document classes.
 
 =head2 doc_classes
 
@@ -280,7 +292,7 @@ sub BUILD {
 
 	# load the classes
 	require Module::Pluggable;
-	Module::Pluggable->import(search_path => [$self->namespace], require => 1, sub_name => '_doc_classes');
+	Module::Pluggable->import(search_path => [$self->namespace], search_dirs => $self->search_dirs, require => 1, sub_name => '_doc_classes');
 	foreach ($self->_doc_classes) {
 		my $name = $_;
 		$name =~ s/$self->{namespace}:://;

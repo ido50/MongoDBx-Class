@@ -1,9 +1,17 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+	- Added the option to tell MongoDBx::Class where to search for
+	  document classes (see the document_dirs attribute)
+	- Added a new question/answer to the FAQ section of the tutorial
+	  explaining when and why MongoDBx::Class might fail to expand
+	  documents to their respective classes
 	- Fixed bug causing MongoDBx::Class to fail when a document class
 	  has attributes that hold blessed values of classes that do not
 	  use Moose.
+	- 01-simple.t now drops the test database before and after running
+	  the test.
+	- renamed the test schema to prevent clashing with other namespaces
 
 0.7       2011-03-17 00:48:50 Asia/Jerusalem
 	- Changed the way database connection is made to be more like

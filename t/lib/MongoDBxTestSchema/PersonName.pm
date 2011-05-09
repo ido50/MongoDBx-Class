@@ -1,4 +1,4 @@
-package Schema::PersonName;
+package MongoDBxTestSchema::PersonName;
 
 use MongoDBx::Class::Moose;
 use namespace::autoclean;

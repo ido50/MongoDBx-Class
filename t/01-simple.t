@@ -1,13 +1,13 @@
-#!perl
+#!/perl
 
+use lib 't/lib';
 use strict;
 use warnings;
 use Test::More;
-use lib 't/lib';
 use MongoDBx::Class;
 use DateTime;
 
-my $dbx = MongoDBx::Class->new(namespace => 'Schema');
+my $dbx = MongoDBx::Class->new(namespace => 'MongoDBxTestSchema');
 
 # temporary bypass, should be removed when I figure out why tests can't find the schema
 if (scalar(keys %{$dbx->doc_classes}) != 5) {
@@ -29,6 +29,7 @@ SKIP: {
 		is($conn->safe, 1, "Using safe operations by default");
 
 		my $db = $conn->get_database('mongodbx_class_test');
+		$db->drop;
 		my $novels_coll = $db->get_collection('novels');
 
 		$novels_coll->ensure_index([ title => 1, year => -1 ]);
@@ -131,6 +132,8 @@ SKIP: {
 		}
 		is($john_john, 1, "Successfully replaced reviewer for all reviews");
 		is_deeply(\@scores, [8, 6, 4], "Successfully increased all scores by three");
+
+		$db->drop;
 	}
 }
 
