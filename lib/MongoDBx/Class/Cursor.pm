@@ -2,7 +2,7 @@ package MongoDBx::Class::Cursor;
 
 # ABSTRACT: A MongoDBx::Class cursor/iterator object for query results
 
-our $VERSION = "0.8";
+our $VERSION = "0.9";
 $VERSION = eval $VERSION;
 
 use Moose;
@@ -42,20 +42,21 @@ No special attributes are added.
 Aside from methods provided by L<MonogDB::Cursor>, the following method
 modifications are performed:
 
-=head2 next()
+=head2 next( [ $do_not_expand ] )
 
 Returns the next document in the cursor, if any. Automatically expands that
 document to the appropriate class (if '_class' attribute exists, otherwise
-document is returned as is).
+document is returned as is). If C<$do_not_expand> is true, the document
+will not be expanded and simply returned as is (i.e. as a hash-ref).
 
 =cut
 
 around 'next' => sub {
-	my ($orig, $self) = (shift, shift);
+	my ($orig, $self, $do_not_expand) = (shift, shift);
 
 	my $doc = $self->$orig || return;
 
-	return $self->_connection->expand($self->_ns, $doc);
+	return $do_not_expand ? $doc : $self->_connection->expand($self->_ns, $doc);
 };
 
 =head2 sort( $rules )

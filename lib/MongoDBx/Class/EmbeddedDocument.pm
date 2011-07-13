@@ -2,7 +2,7 @@ package MongoDBx::Class::EmbeddedDocument;
 
 # ABSTRACT: A MongoDBx::Class embedded (sub-)document role
 
-our $VERSION = "0.8";
+our $VERSION = "0.9";
 $VERSION = eval $VERSION;
 
 use Moose::Role;
@@ -92,6 +92,8 @@ sub as_hashref {
 
 	return $hash;
 }
+
+=head1 INTERNAL METHODS
 
 =head2 _database()
 

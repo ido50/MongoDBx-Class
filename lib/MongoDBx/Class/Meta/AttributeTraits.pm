@@ -2,7 +2,7 @@ package MongoDBx::Class::Meta::AttributeTraits;
 
 # ABSTRACT: Attribute traits provided by MongoDBx::Class
 
-our $VERSION = "0.8";
+our $VERSION = "0.9";
 $VERSION = eval $VERSION;
 
 =head1 NAME
@@ -15,7 +15,7 @@ package MongoDBx::Class::Meta::AttributeTraits::Parsed;
 
 # ABSTRACT: An attribute trait for attributes automatically expanded and collapsed by a parser class.
 
-our $VERSION = "0.8";
+our $VERSION = "0.9";
 $VERSION = eval $VERSION;
 
 use Moose::Role;

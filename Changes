@@ -1,6 +1,22 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+	[ New features ]
+	- Created a very-simple connection pool under the new
+	  MongoDBx::Class::ConnectionPool class (experimental), see the
+	  documentation of the MongoDBx::Class::pool() method for more
+	  information.
+	- Changed MongoDBx::Class::Cursor::next() such that it takes an
+	  option to return the document as is (i.e. as a hash-ref) without
+	  expanding it.
+
+	[ Bug fixes ]
+	- MongoDBx::Class::Document::update(), when called with an update
+	  hash-ref, will return the output of MongoDB::Collection::update()
+	  as expected (did not do that before causing a false value to be
+	  returned even if update succeeded).
+
+0.8       2011-05-09 19:54:24 Asia/Jerusalem
 	- Added the option to tell MongoDBx::Class where to search for
 	  document classes (see the document_dirs attribute)
 	- Added a new question/answer to the FAQ section of the tutorial

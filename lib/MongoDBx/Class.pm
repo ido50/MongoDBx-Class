@@ -2,7 +2,7 @@ package MongoDBx::Class;
 
 # ABSTRACT: Flexible ORM for MongoDB databases
 
-our $VERSION = "0.8";
+our $VERSION = "0.9";
 $VERSION = eval $VERSION;
 
 use Moose;
@@ -10,6 +10,7 @@ use Moose::Util::TypeConstraints;
 use namespace::autoclean;
 use MongoDB 0.40;
 use MongoDBx::Class::Connection;
+use MongoDBx::Class::ConnectionPool;
 use MongoDBx::Class::Database;
 use MongoDBx::Class::Collection;
 use MongoDBx::Class::Cursor;
@@ -74,8 +75,7 @@ MongoDBx::Class - Flexible ORM for MongoDB databases
 
 =head1 DESCRIPTION
 
-WARNING: MongoDBx::Class is still in beta status. Please do not rely on
-it yet for production use.
+WARNING: This is beta software.
 
 L<MongoDBx::Class> is a flexible object relational mapper (ORM) for
 L<MongoDB> databases. Given a schema-like collection of document classes,
@@ -273,6 +273,20 @@ sub connect {
 	$opts{doc_classes} = $self->doc_classes;
 
 	return MongoDBx::Class::Connection->new(%opts);
+}
+
+=head2 pool( %opts )
+
+=cut
+
+sub pool {
+	my ($self, %opts) = @_;
+
+	$opts{params} ||= {};
+	$opts{params}->{namespace} = $self->namespace;
+	$opts{params}->{doc_classes} = $self->doc_classes;
+
+	return MongoDBx::Class::ConnectionPool->new(%opts);
 }
 
 =head1 INTERNAL METHODS
