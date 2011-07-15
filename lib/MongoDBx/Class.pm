@@ -10,7 +10,8 @@ use Moose::Util::TypeConstraints;
 use namespace::autoclean;
 use MongoDB 0.40;
 use MongoDBx::Class::Connection;
-use MongoDBx::Class::ConnectionPool;
+use MongoDBx::Class::ConnectionPool::Backup;
+use MongoDBx::Class::ConnectionPool::Rotated;
 use MongoDBx::Class::Database;
 use MongoDBx::Class::Collection;
 use MongoDBx::Class::Cursor;
@@ -46,6 +47,8 @@ MongoDBx::Class - Flexible ORM for MongoDB databases
 
 =head1 SYNOPSIS
 
+Normal usage:
+
 	use MongoDBx::Class;
 
 	# create a new instance of the module and load a model schema
@@ -72,6 +75,8 @@ MongoDBx::Class - Flexible ORM for MongoDB databases
 	$person->update({ name => 'Some Smart Guy' });
 
 	$person->delete;
+
+See L<MongoDBx::Class::ConnectionPool> for simple connection pool usage.
 
 =head1 DESCRIPTION
 
@@ -286,7 +291,11 @@ sub pool {
 	$opts{params}->{namespace} = $self->namespace;
 	$opts{params}->{doc_classes} = $self->doc_classes;
 
-	return MongoDBx::Class::ConnectionPool->new(%opts);
+	if ($opts{type} && $opts{type} eq 'rotated') {
+		return MongoDBx::Class::ConnectionPool::Rotated->new(%opts);
+	} else {
+		return MongoDBx::Class::ConnectionPool::Backup->new(%opts);
+	}
 }
 
 =head1 INTERNAL METHODS

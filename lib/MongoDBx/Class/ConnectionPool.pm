@@ -5,27 +5,91 @@ package MongoDBx::Class::ConnectionPool;
 our $VERSION = "0.9";
 $VERSION = eval $VERSION;
 
-use Moose;
+use Moose::Role;
 use namespace::autoclean;
-use Time::HiRes qw/time/;
 use Carp;
+
+=head1 NAME
+
+MongoDBx::Class::ConnectionPool - A simple connection pool for MongoDBx::Class
+
+=head1 SYNOPSIS
+
+	# create a MongoDBx::Class object normally:
+	use MongoDBx::Class;
+	my $dbx = MongoDBx::Class->new(namespace => 'MyApp::Model::DB');
+
+	# instead of connection, create a rotated pool
+	my $pool = $dbx->pool(max_conns => 200, type => 'pool'); # max_conns defaults to 100
+
+	# or, if you need to pass attributes to MongoDB::Connection->new():
+	my $pool = $dbx->pool(max_conns => 200, type => 'pool', params => {
+		host => $host,
+		username => $username,
+		password => $password,
+	});
+
+	# get a connection from the pool on a per-request basis
+	my $conn = $pool->get_conn;
+
+	# ... do stuff with $conn and return it when done ...
+
+	$pool->return_conn($conn);
+
+=head1 DESCRIPTION
+
+WARNING: connection pooling via MongoDBx::Class is experimental. It is a
+quick, simple implementation that may or may not work as expected.
+
+MongoDBx::Class::ConnectionPool is a very simple interface for creating
+MongoDB connection pools. The basic idea is: create a pool with a maximum
+number of connections as a setting. Give connections from the pool on a per-request
+basis. The pool is empty at first, and connections are created for each
+request, until the maximum is reached. The behaviour of the pool when this
+maximum is reached is dependant on the implementation. There are currently
+two implementations:
+
+=over
+
+=item * Rotated pools (L<MongoDBx::Class::ConnectionPool::Rotated>) - these
+pools hold at most the number of maximum connections defined. An index is
+held, initially starting at zero. When a request for a connection is made,
+the connection located at the current index is returned (if exists, otherwise
+a new one is created), and the index is raised. When the index reaches the
+end of the pool, it returns to the beginning (i.e. zero), and the next
+request will receive the first connection in the pool, and so on. This means
+that every connection in the pool can be shared by an unlimited number of
+requesters.
+
+=item * Backup pools (L<MongoDBx::Class::ConnectionPool::Backup>) - these
+pools expect the receiver of a connection to return it when they're done
+using it. If no connections are available when a request is made (i.e.
+all connections are currently used), a backup connection is returned (there
+can be only one backup connection). This means that every connection in
+the pool can be used by one requester, except for the backup connection.
+
+=back
+
+The rotated pool makes more sense for pools with a relatively low number
+of connections, while the backup pool is more fit for a larger number of
+connections. The selection should be based, among other factors, on your
+application's metrics: how many end-users (e.g. website visitors) use your
+application concurrently? does your application experience periods of
+larger usage numbers at certain points of the day/week? does it make more
+sense for you to balance work between a predefined number of connections
+(rotated pool) or do you prefer each end-user to get its own connection
+(backup pool)?
+
+At any rate, every end-user will receive a connection, shared or not.
+
+=head1 ATTRIBUTES
+
+=cut
 
 has 'max_conns' => (
 	is => 'ro',
 	isa => 'Int',
 	default => 100,
-);
-
-has 'when_full' => (
-	is => 'ro',
-	isa => 'Str',
-	default => 'wait',
-);
-
-has 'timeout' => (
-	is => 'ro',
-	isa => 'Int',
-	default => 10,
 );
 
 has 'pool' => (
@@ -48,70 +112,8 @@ has 'params' => (
 	required => 1,
 );
 
-around BUILDARGS => sub {
-	my ($orig, $class, %opts) = @_;
-
-	croak "Illegal 'when_full' option, must either be 'wait' or 'fail'."
-		if %opts && exists $opts{when_full} && $opts{when_full} ne 'wait' && $opts{when_full} ne 'fail';
-
-	return $class->$orig(%opts);
-};
-
-sub get_conn {
-	my $self = shift;
-
-	# are there available connections in the pool?
-	if (scalar @{$self->pool}) {
-		return $self->_take_from_pool;
-	}
-
-	# there aren't any, can we create a new connection?
-	if ($self->num_used < $self->max_conns) {
-		# yes we can, let's create it
-		return $self->_get_new_conn;
-	}
-
-	# we can't, should we return failure?
-	if ($self->when_full eq 'fail') {
-		croak 'No available connections to MongoDB server.';
-	} else {
-		my $time = time;
-		do {
-			$self->_wait(1); # wait 1 second
-			# check again
-			if (scalar @{$self->pool}) {
-				return $self->_take_from_pool;
-			} elsif ($self->num_used < $self->max_conns) {
-				return $self->_get_new_conn;
-			}
-		} while (time - $time <= $self->timeout);
-		
-		# timeout reached, croak
-		croak 'No available connections to MongoDB server and timeout reached.';
-	}
-}
-
-sub return_conn {
-	my ($self, $conn) = @_;
-
-	# only add connection if pool isn't full, otherwise discard it
-	if (scalar @{$self->pool} + $self->num_used - 1 < $self->max_conns) {
-		$self->_add_to_pool($conn);
-		$self->_inc_used(-1);
-	} else {
-		undef $conn;
-	}
-}
-
-sub _take_from_pool {
-	my $self = shift;
-
-	my $pool = $self->pool;
-	my $conn = shift @$pool;
-	$self->_set_pool($pool);
-	$self->_inc_used;
-	return $conn;
-}
+requires 'get_conn';
+requires 'return_conn';
 
 sub _get_new_conn {
 	my $self = shift;
@@ -136,15 +138,4 @@ sub _add_to_pool {
 	$self->_set_pool($pool);
 }
 
-sub _wait {
-	my ($self, $sec) = @_;
-
-	my $time = time;
-	while (time - $time < $sec) {
-		# do squat
-	}
-
-	return;
-}
-
-__PACKAGE__->meta->make_immutable;
+1;

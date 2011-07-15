@@ -6,6 +6,7 @@ use warnings;
 use Test::More;
 use MongoDBx::Class;
 use Time::HiRes qw/time/;
+use Data::Dumper;
 
 my $dbx = MongoDBx::Class->new(namespace => 'MongoDBxTestSchema');
 
@@ -13,7 +14,7 @@ my $dbx = MongoDBx::Class->new(namespace => 'MongoDBxTestSchema');
 if (scalar(keys %{$dbx->doc_classes}) != 5) {
 	plan skip_all => "Temporary skip due to schema not being found";
 } else {
-	plan tests => 5;
+	plan tests => 10;
 }
 
 SKIP: {
@@ -24,48 +25,34 @@ SKIP: {
 		# discard the connection
 		my $conn;
 		eval { $conn = $dbx->connect };
-		skip "Can't connect to MongoDB server", 4 if $@;
+		skip "Can't connect to MongoDB server", 9 if $@;
 
-		# create a pool of 5 connections that fails when connections
-		# are not available
-		my $pool = $dbx->pool(
-			max_conns => 5,
-			when_full => 'fail',
-		);
+		#-------------------------------------------------------
+		# BACKUP POOL
+		#-------------------------------------------------------
+		my $pool = $dbx->pool(max_conns => 3, type => 'backup');
 
-		# create five connections
-		my @conns = map { $pool->get_conn } (1 .. 5);
-		diag("using ".$pool->num_used."/".(scalar(@{$pool->pool})+$pool->num_used)." connections");
-		diag("trying to get another connection");
-		eval { $conn = $pool->get_conn };
-		ok($@ =~ m/No available connections to MongoDB server/, 'pool returns failure when full as required');
+		my @conns = map { $pool->get_conn } (1 .. 3);
+		ok(!$conns[0]->is_backup, 'conn 1 of pool is not backup');
+		ok(!$conns[1]->is_backup, 'conn 2 of pool is not backup');
+		ok(!$conns[2]->is_backup, 'conn 3 of pool is not backup');
+		$conn = $pool->get_conn;
+		ok($conn && $conn->is_backup, 'when all conns are used the backup is returned');
+		ok(!$pool->return_conn($conn), 'pool does not return backup conn');
 
-		# now return one connection and try again
-		$pool->return_conn(shift(@conns));
-		diag("returned connection so now using ".$pool->num_used."/".(scalar(@{$pool->pool})+$pool->num_used).", trying again");
-		eval { $conn = $pool->get_conn };
-		ok($conn, 'pool returns connection when not full.');
+		#-------------------------------------------------------
+		# ROTATED POOL
+		#-------------------------------------------------------
+		$pool = $dbx->pool(max_conns => 2, type => 'rotated');
 
-		# return all connections
-		while (scalar @conns) {
-			$pool->return_conn(shift @conns);
-		}
-		$pool->return_conn($conn);
-		diag("returned all connections");
-
-		ok($pool->num_used == 0 && scalar @{$pool->pool} == 5, 'all connections now available');
-		
-		sleep(10);
-
-		# close all connections
-		foreach (1 .. 5) {
-			my $c = $pool->get_conn;
-			undef $c;
-		}
-		ok($pool->num_used == 0 && scalar @{$pool->pool} == 0, 'all connections closed');
-		diag("closed all connections");
-		
-		sleep(10);
+		@conns = map { $pool->get_conn } (1 .. 2);
+		is($pool->num_used, 2, 'created two connections');
+		$conn = $pool->get_conn;
+		ok($conn && $pool->num_used == 1, 'rotated to pool start');
+		$conn = $pool->get_conn;
+		ok($conn && $pool->num_used == 2, 'once again at end of pool');
+		$conn = $pool->get_conn;
+		ok($conn && $pool->num_used == 1, 'once again at the beginning');
 	}
 }
 
