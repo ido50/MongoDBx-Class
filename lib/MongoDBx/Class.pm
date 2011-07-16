@@ -180,6 +180,12 @@ fit well with MongoDB. L<Mongoose::Intro|Mongoose::Intro/"Why not use KiokuDB?">
 already gives a pretty convincing case when and why you should or shouldn't
 want to use KiokuDB.
 
+=head2 CONNECTION POOLING
+
+Since version 0.9, C<MongoDBx::Class> provides experimental, simple connection pooling for
+applications. Take a look at L<MongoDBx::Class::ConnectionPool> for more
+information.
+
 =head2 CAVEATS AND THINGS TO CONSIDER
 
 There are a few caveats and important facts to take note of when using
