@@ -104,7 +104,7 @@ of the connection to be given to the next end-user.
 
 =head2 params
 
-A hash-ref of parameters to pass to C<MongoDB::Connection->new()> when
+A hash-ref of parameters to pass to C<< MongoDB::Connection->new() >> when
 creating a new connection. See L<MongoDB::Connection/"ATTRIBUTES"> for
 more information.
 
