@@ -156,6 +156,8 @@ be called by the end-user after being done with the connection. Only relevant
 when C<get_conn()> actually takes the connection out of the pool (so it
 is not shared), like with backup pools. Otherwise this method may do nothing.
 
+=back
+
 =cut
 
 requires 'get_conn';
