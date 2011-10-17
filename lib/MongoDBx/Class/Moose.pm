@@ -113,6 +113,7 @@ sub belongs_to {
 		my $self = shift;
 
 		my $attr = '_'.$name;
+		return unless $self->$attr;
 		return $self->$attr->load;
 	});
 }

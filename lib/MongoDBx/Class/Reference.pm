@@ -7,6 +7,7 @@ $VERSION = eval $VERSION;
 
 use Moose;
 use namespace::autoclean;
+use Carp;
 
 =head1 NAME
 
