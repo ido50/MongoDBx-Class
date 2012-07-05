@@ -224,6 +224,8 @@ sub expand {
 			load $_->parser;
 			my $val = $_->parser->new->expand($doc->{$_->name});
 			$attrs{$_->name} = $val if defined $val;
+		} elsif ($_ && $_->can('does') && $_->does('Transient')) { # untested
+			next;
 		# just pass the value as is
 		} else {
 			next unless exists $doc->{$_->name} && defined $doc->{$_->name};
@@ -279,6 +281,9 @@ sub collapse {
 			} else {
 				$new_doc->{$_} = $parser->collapse($doc->{$_});
 			}
+		
+		} elsif ($attr && $attr->can('does') && $attr->does('Transient')) {
+			next;
 		} else {
 			$new_doc->{$_} = $self->_collapse_val($doc->{$_});
 		}

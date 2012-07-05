@@ -38,6 +38,22 @@ sub _build_parser {
 	sub register_implementation { 'MongoDBx::Class::Meta::AttributeTraits::Parsed' }
 }
 
+package MongoDBx::Class::Meta::AttributeTraits::Transient;
+# ABSTRACT: An attribute trait for attributes automatically expanded and collapsed by a parser class.
+
+our $VERSION = "0.91";
+$VERSION = eval $VERSION;
+
+use Moose::Role;
+use namespace::autoclean;
+
+{
+	package Moose::Meta::Attribute::Custom::Trait::Transient;
+	sub register_implementation { 'MongoDBx::Class::Meta::AttributeTraits::Transient' }
+}
+
+
+
 =head1 AUTHOR
 
 Ido Perlmuter, C<< <ido at ido50.net> >>

@@ -3,6 +3,7 @@ package MongoDBxTestSchema::Novel;
 use MongoDBx::Class::Moose;
 use namespace::autoclean;
 
+
 with 'MongoDBx::Class::Document';
 
 has 'title' => (is => 'ro', isa => 'Str', required => 1, writer => 'set_title');
@@ -20,6 +21,10 @@ joins_one 'synopsis' => (is => 'ro', isa => 'Synopsis', coll => 'synopsis', ref 
 has_many 'related_novels' => (is => 'ro', isa => 'Novel', predicate => 'has_related_novels', writer => 'set_related_novels', clearer => 'clear_related_novels');
 
 joins_many 'reviews' => (is => 'ro', isa => 'Review', coll => 'reviews', ref => 'novel');
+
+has review_count => (is => 'rw', isa => 'Int', traits => ['Transient'], lazy => 1, builder => '_build_review_count');
+
+sub _build_review_count { shift->reviews->count }
 
 sub print_related_novels {
 	my $self = shift;

@@ -13,7 +13,7 @@ my $dbx = MongoDBx::Class->new(namespace => 'MongoDBxTestSchema');
 if (scalar(keys %{$dbx->doc_classes}) != 5) {
 	plan skip_all => "Temporary skip due to schema not being found";
 } else {
-	plan tests => 20;
+	plan tests => 20 + 7;
 }
 
 SKIP: {
@@ -103,7 +103,7 @@ SKIP: {
 		is($novel->year, 1915, "novel's year successfully changed");
 		is($novel->author->middle_name, 'Xoxa', "author's middle name successfully changed");
 
-		is_deeply([$novel->_attributes], [qw/_id added author related_novels tags title year/], '_attributes okay');
+		is_deeply([$novel->_attributes], [qw/_id added author related_novels review_count tags title year/], '_attributes okay');
 		is_deeply([$novel->author->_attributes], [qw/first_name last_name middle_name/], 'embedded _attributes okay');
 
 		my $found_novel = $db->novels->find_one($novel->id);
@@ -133,7 +133,44 @@ SKIP: {
 		is($john_john, 1, "Successfully replaced reviewer for all reviews");
 		is_deeply(\@scores, [8, 6, 4], "Successfully increased all scores by three");
 
-		$db->drop;
+		# Test transient Attributes
+		is $novel->review_count, 3, 'Correct number of reviews found';
+		$novel->review_count(4);
+		is $novel->review_count, 4, 'Setting transient value for reviews';
+		is $novel->review_count, 4, 'Set number of reviews is correct';
+		$novel->update;
+		
+		my $novel_fetched = $db->novels->find_one($novel->id);
+		is $novel_fetched->review_count, 3, 'Transient value was not saved in DB';
+		
+		$novel = $db->novels->find_one($novel->id); # refresh from DB
+		$novel->update({ review_count => 4 });
+		is $novel->review_count, 3, 'Transient value not updated'; # really the correct behaviour?
+		
+		$novel_fetched = $db->novels->find_one($novel->id); # refresh
+		is $novel_fetched->review_count, 3, 'Transient value was not saved in DB';
+		
+		my $novel2 = $novels_coll->insert({
+			_class => 'Novel',
+			title => 'Modern Perl',
+			year => 2010,
+			author => {
+				first_name => '',
+				middle_name => 'chromatic',
+				last_name => '',
+			},
+			added => DateTime->now(time_zone => 'Asia/Jerusalem'),
+			tags => [
+				{ category => 'programming', subcategory => 'perl' },
+			],
+			review_count => 2,
+		});
+		
+		 # sorry but I don't know, why this works already
+		is $novel2->review_count, 0, 'Transient value is not inflated';
+		
+		
+		#$db->drop;
 	}
 }
 
