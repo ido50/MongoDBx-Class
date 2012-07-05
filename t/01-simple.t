@@ -166,11 +166,10 @@ SKIP: {
 			review_count => 2,
 		});
 		
-		 # sorry but I don't know, why this works already
+		# sorry but I don't know, why this works already
 		is $novel2->review_count, 0, 'Transient value is not inflated';
 		
-		
-		#$db->drop;
+		$db->drop;
 	}
 }
 
