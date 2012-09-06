@@ -3,7 +3,8 @@ Revision history for MongoDBx::Class
 {{$NEXT}}
 	- Added a new Transient attribute trait, for document attributes that
 	  do not get saved in the database (thanks Thomas Müller)
-	- Small documentation fixes
+	- Expanded documentation on the joins_many relationship
+	- Small documentation fixes (thanks Dan Dascalescu)
 	- Module no longer considered beta
 
 0.91      2011-07-16 20:21:43 Asia/Jerusalem

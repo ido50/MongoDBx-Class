@@ -394,6 +394,8 @@ me in writing MongoDBx::Class.
 
 =item * Thomas Müller, for adding support for the Transient trait.
 
+=item * Dan Dascalescu, for fixing typos and other problems in the documentation.
+
 =back
 
 =head1 LICENSE AND COPYRIGHT
