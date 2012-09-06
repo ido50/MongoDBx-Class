@@ -311,8 +311,8 @@ performed like so:
 
 	$db->get_collection('synopsis')->find_one({ 'novel.$id' => $doc->_id })
 
-Note that passing a 'required' option to C<joins_one> has no effect at all,\
-the existance of the referencing document is never enforced, so C<undef>
+Note that passing a 'required' option to C<joins_one> has no effect at all,
+the existence of the referencing document is never enforced, so C<undef>
 can be returned.
 
 =cut

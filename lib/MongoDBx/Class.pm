@@ -103,7 +103,7 @@ every object class, MongoDBx::Class allows you to store documents of
 different classes in different collections (and even databases). A collection
 can hold documents of many different classes. Not only that, as MongoDBx::Class
 is Moose based, you can easily create very flexible schemas by using
-concepts such as inheritance and L<roles|Moose::Role>. For example, say
+concepts such as inheritance and L<roles|Moose::Manual::Roles>. For example, say
 you have a collection called 'people' with documents representing, well,
 people, but these people can either be teachers or students. Also, students
 may assume the role "hall monitor". With MongoDBx::Class, you can create
