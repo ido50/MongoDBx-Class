@@ -2,7 +2,7 @@ package MongoDBx::Class::Connection;
 
 # ABSTARCT: A connection to a MongoDB server
 
-our $VERSION = "0.91";
+our $VERSION = "1.00";
 $VERSION = eval $VERSION;
 
 use Moose;
@@ -97,7 +97,7 @@ Overrides the current value of the safe attribute with a new boolean value.
 
 =head2 expand( $coll_ns, \%doc )
 
-Returns the full name (a.k.a namespace) of a collection (that is the database
+Receives the full name (a.k.a namespace) of a collection (that is the database
 name, followed by a dot, and the collection name), and a document hash-ref,
 and attempts to expand it according to the '_class' attribute that should
 exist in the document. If it doesn't exist, the document is returned as
@@ -219,12 +219,13 @@ sub expand {
 				$attrs{$_->name} = $self->expand($coll_ns, $doc->{$_->name});
 			}
 		# is this an expanded attribute?
-		} elsif ($_->can('does') && $_->does('MongoDBx::Class::Meta::AttributeTraits::Parsed') && $_->parser) {
+		} elsif ($_->can('does') && $_->does('Parsed') && $_->parser) {
 			next unless exists $doc->{$_->name} && defined $doc->{$_->name};
 			load $_->parser;
 			my $val = $_->parser->new->expand($doc->{$_->name});
 			$attrs{$_->name} = $val if defined $val;
-		} elsif ($_ && $_->can('does') && $_->does('Transient')) { # untested
+		# is this a transient attribute?
+		} elsif ($_->can('does') && $_->does('Transient')) {
 			next;
 		# just pass the value as is
 		} else {
@@ -269,7 +270,7 @@ sub collapse {
 		next if $_ eq '_class';
 
 		my $attr = $dc->meta->get_attribute($_);
-		if ($attr && $attr->can('does') && $attr->does('MongoDBx::Class::Meta::AttributeTraits::Parsed') && $attr->parser) {
+		if ($attr && $attr->can('does') && $attr->does('Parsed') && $attr->parser) {
 			load $attr->parser;
 			my $parser = $attr->parser->new;
 			if (ref $doc->{$_} eq 'ARRAY') {
@@ -384,7 +385,7 @@ L<MongoDBx::Class>, L<MongoDB::Connection>.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010-2011 Ido Perlmuter.
+Copyright 2010-2012 Ido Perlmuter.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

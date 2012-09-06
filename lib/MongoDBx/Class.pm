@@ -2,7 +2,7 @@ package MongoDBx::Class;
 
 # ABSTRACT: Flexible ORM for MongoDB databases
 
-our $VERSION = "0.91";
+our $VERSION = "1.00";
 $VERSION = eval $VERSION;
 
 use Moose;
@@ -79,8 +79,6 @@ Normal usage:
 See L<MongoDBx::Class::ConnectionPool> for simple connection pool usage.
 
 =head1 DESCRIPTION
-
-WARNING: This is beta software.
 
 L<MongoDBx::Class> is a flexible object relational mapper (ORM) for
 L<MongoDB> databases. Given a schema-like collection of document classes,
@@ -191,11 +189,7 @@ information.
 There are a few caveats and important facts to take note of when using
 MongoDBx::Class as of today:
 
-=over 4
-
-=item * It's alpha software. This is an early release, and bugs are found
-(and fixed) all the time. Don't rely on it for production use yet. You have
-been warned.
+=over
 
 =item * MongoDBx::Class's flexibility is dependant on its ability to recognize
 which class a document in a MongoDB collection expands to. Currently,
@@ -345,10 +339,6 @@ sub BUILD {
 =item * Make the C<isa> option in L<MongoDBx::Class::Moose>'s relationship
 types consistent. Either use the full package names or the short class names.
 
-=item * Add support for the L<AnyMongo> driver.
-
-=item * Add support for document attributes which are not to be saved in the database.
-
 =item * Try to find a way to not require documents to have the _class attribute.
 
 =back
@@ -397,12 +387,18 @@ L<MongoDB>, L<Mongoose>, L<Mongrel>, L<KiokuDB::Backend::MongoDB>.
 
 =head1 ACKNOWLEDGEMENTS
 
-Rodrigo de Oliveira, author of L<Mongoose>, whose code greatly assisted
+=over
+
+=item * Rodrigo de Oliveira, author of L<Mongoose>, whose code greatly assisted
 me in writing MongoDBx::Class.
+
+=item * Thomas Müller, for adding support for the Transient trait.
+
+=back
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010-2011 Ido Perlmuter.
+Copyright 2010-2012 Ido Perlmuter.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

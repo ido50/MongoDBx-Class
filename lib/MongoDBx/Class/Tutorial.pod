@@ -150,7 +150,9 @@ document class representing novels:
 	has 'year' => (is => 'ro', isa => 'Int', predicate => 'has_year', writer => 'set_year');
 
 	has 'added' => (is => 'ro', isa => 'DateTime', traits => ['Parsed'], required => 1);
-	
+
+	has 'review_count' => (is => 'rw', isa => 'Int', traits => ['Transient'], builder => '_build_review_count');
+
 	holds_many 'tags' => (is => 'ro', isa => 'MyApp::Schema::Tag', predicate => 'has_tags');
 
 	joins_one 'synopsis' => (is => 'ro', isa => 'Synopsis', coll => 'synopsis', ref => 'novel');
@@ -158,6 +160,8 @@ document class representing novels:
 	has_many 'related_novels' => (is => 'ro', isa => 'Novel', predicate => 'has_related_novels', writer => 'set_related_novels', clearer => 'clear_related_novels');
 
 	joins_many 'reviews' => (is => 'ro', isa => 'Review', coll => 'reviews', ref => 'novel');
+
+	sub _build_review_count { shift->reviews->count }
 
 	sub print_related_novels {
 		my $self = shift;
@@ -194,7 +198,7 @@ C<has_many> for the list of references to related novels.
 You will notice that when using the C<holds_one> and C<holds_many> relationship
 types, we've given the full package names to the C<isa> option (such as
 MyApp::Schema::PersonName), while in other relationship types, we've given
-the class names only (such as 'Snyopsis'). This inconsistency is only
+the class names only (such as 'Synopsis'). This inconsistency is only
 temporary, and will change in future versions, so keep your finger on the
 pulse.
 
@@ -227,6 +231,16 @@ documentation):
 	module, which parses dates in the format recommended by the W3C. This is
 	good for web apps, and also makes it easier to edit dates from the
 	MongoDB shell. But most importantly, it also allows sorting by date.
+
+Also note the 'review_count' attribute, which has the 'Transient' trait.
+This trait means the attribute is not to be saved in the database, even
+though it is one of the document's attributes. This is useful for calculated
+attributes, or any supporting attributes you add to a document class whose
+state should not be saved. You should note that if for some reason a
+document in the database I<does> have an attribute marked as transient in
+the document's class (for example if you added it to the document manually),
+the value of this attribute will also be ignored when the document is read
+from the database.
 
 Continuing on, lets create our two embedded document classes. We'll start
 with PersonName:
@@ -740,7 +754,7 @@ L<MongoDBx::Class>, L<MongoDB>, L<http://www.mongodb.org/>.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010-2011 Ido Perlmuter.
+Copyright 2010-2012 Ido Perlmuter.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
