@@ -1,6 +1,8 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+
+1.01      2012-12-11 22:02:29 Asia/Jerusalem
 	- Updated to extend the correct MongoDB connection class
 	  depending on the installed version of the MongoDB driver
 	  (starting at MongoDB v0.503.1 MongoDB::Connection has been
