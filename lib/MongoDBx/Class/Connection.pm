@@ -2,14 +2,19 @@ package MongoDBx::Class::Connection;
 
 # ABSTARCT: A connection to a MongoDB server
 
-our $VERSION = "1.00";
+our $VERSION = "1.01";
 $VERSION = eval $VERSION;
 
 use Moose;
 use namespace::autoclean;
 use Module::Load;
+use version;
 
-extends 'MongoDB::Connection';
+if (version->parse($MongoDB::VERSION) < v0.502.0) { 
+	extends 'MongoDB::Connection';
+} else {
+	extends 'MongoDB::MongoClient';
+}
 
 =head1 NAME
 

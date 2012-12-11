@@ -1,6 +1,12 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+	- Updated to extend the correct MongoDB connection class
+	  depending on the installed version of the MongoDB driver
+	  (starting at MongoDB v0.503.1 MongoDB::Connection has been
+	  deprecated in favor of MongoDB::MongoClient)
+
+1.00      2012-09-06 21:20:00 Asia/Jerusalem
 	- Added a new Transient attribute trait, for document attributes that
 	  do not get saved in the database (thanks Thomas Müller)
 	- Expanded documentation on the joins_many relationship

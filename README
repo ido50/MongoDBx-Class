@@ -2,10 +2,16 @@ NAME
     MongoDBx::Class - Flexible ORM for MongoDB databases
 
 SYNOPSIS
+    Normal usage:
+
             use MongoDBx::Class;
 
             # create a new instance of the module and load a model schema
             my $dbx = MongoDBx::Class->new(namespace => 'MyApp::Model::DB');
+
+            # if MongoDBx::Class can't find your model schema (possibly because
+            # it exists in some different location), you can do this:
+            my $dbx = MongoDBx::Class->new(namespace => 'MyApp::Model::DB', search_dirs => ['/path/to/model/dir']);
 
             # connect to a MongoDB server
             my $conn = $dbx->connect(host => 'localhost', port => 27017);
@@ -25,10 +31,9 @@ SYNOPSIS
 
             $person->delete;
 
-DESCRIPTION
-    WARNING: MongoDBx::Class is still in beta status. Please do not rely on
-    it yet for production use.
+    See MongoDBx::Class::ConnectionPool for simple connection pool usage.
 
+DESCRIPTION
     MongoDBx::Class is a flexible object relational mapper (ORM) for MongoDB
     databases. Given a schema-like collection of document classes,
     MongoDBx::Class expands MongoDB objects (hash-refs in Perl) from the
@@ -122,13 +127,14 @@ DESCRIPTION
     fit well with MongoDB. Mongoose::Intro already gives a pretty convincing
     case when and why you should or shouldn't want to use KiokuDB.
 
+  CONNECTION POOLING
+    Since version 0.9, "MongoDBx::Class" provides experimental, simple
+    connection pooling for applications. Take a look at
+    MongoDBx::Class::ConnectionPool for more information.
+
   CAVEATS AND THINGS TO CONSIDER
     There are a few caveats and important facts to take note of when using
     MongoDBx::Class as of today:
-
-    *   It's alpha software. This is an early release, and bugs are found
-        (and fixed) all the time. Don't rely on it for production use yet.
-        You have been warned.
 
     *   MongoDBx::Class's flexibility is dependant on its ability to
         recognize which class a document in a MongoDB collection expands to.
@@ -161,6 +167,11 @@ ATTRIBUTES
     be descendants of this namespace (e.g. "MyApp::Schema::Article",
     "MyApp::Schema::Post").
 
+  search_dirs
+    An array-ref of directories in which to search for the document classes.
+    Not required, useful if for some reason MongoDBx::Class can't find your
+    document classes.
+
   doc_classes
     A hash-ref of document classes found when loading the schema.
 
@@ -185,6 +196,14 @@ OBJECT METHODS
     like how connection is made in MongoDB (and to allow multiple
     connections). This change breaks backwords compatibility.
 
+  pool( [ type => $type, max_conns => $max_conns, params => \%params, ... ] )
+    Creates a new connection pool (see MongoDBx::Class::ConnectionPool for
+    more info) and returns it. "type" is either 'rotated' or 'backup' (the
+    default). "params" is a hash-ref of parameters that can be passed to
+    "MongoDB::Connection->new()" when creating connections in the pool. See
+    "ATTRIBUTES" in MongoDBx::Class::ConnectionPool for a complete list of
+    attributes that can be passed.
+
 INTERNAL METHODS
     The following methods are only to be used internally.
 
@@ -199,11 +218,6 @@ TODO
     *     Make the "isa" option in MongoDBx::Class::Moose's relationship
           types consistent. Either use the full package names or the short
           class names.
-
-    *     Add support for the AnyMongo driver.
-
-    *     Add support for document attributes which are not to be saved in
-          the database.
 
     *     Try to find a way to not require documents to have the _class
           attribute.
@@ -245,11 +259,16 @@ SEE ALSO
     MongoDB, Mongoose, Mongrel, KiokuDB::Backend::MongoDB.
 
 ACKNOWLEDGEMENTS
-    Rodrigo de Oliveira, author of Mongoose, whose code greatly assisted me
-    in writing MongoDBx::Class.
+    *   Rodrigo de Oliveira, author of Mongoose, whose code greatly assisted
+        me in writing MongoDBx::Class.
+
+    *   Thomas Müller, for adding support for the Transient trait.
+
+    *   Dan Dascalescu, for fixing typos and other problems in the
+        documentation.
 
 LICENSE AND COPYRIGHT
-    Copyright 2010-2011 Ido Perlmuter.
+    Copyright 2010-2012 Ido Perlmuter.
 
     This program is free software; you can redistribute it and/or modify it
     under the terms of either: the GNU General Public License as published
