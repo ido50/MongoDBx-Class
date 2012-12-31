@@ -2,11 +2,12 @@ package MongoDBx::Class::Database;
 
 # ABSTRACT: A MongoDBx::Class database object
 
-our $VERSION = "1.01";
+our $VERSION = "1.02";
 $VERSION = eval $VERSION;
 
 use Moose;
 use namespace::autoclean;
+use version;
 
 extends 'MongoDB::Database';
 
@@ -43,6 +44,10 @@ Only the C<get_collection> method is modified as described above.
 override 'get_collection' => sub {
 	MongoDBx::Class::Collection->new(_database => shift, name => shift);
 };
+
+sub _connection {
+	version->parse($MongoDB::VERSION) < v0.502.0 ? $_[0]->SUPER : $_[0]->_client;
+}
 
 =head1 AUTHOR
 

@@ -57,7 +57,7 @@ SKIP: {
 
 		is($novel->author->name, 'Arthur Conan Doyle', 'embedded document works');
 
-		my $synopsis = $db->synopsis->insert({
+		my $synopsis = $db->get_collection('synopsis')->insert({
 			_class => 'Synopsis',
 			novel => $novel,
 			text => "The Valley of Fear is the final Sherlock Holmes novel by Sir Arthur Conan Doyle. The story was first published in the Strand Magazine between September 1914 and May 1915. The first book edition was published in New York on 27 February 1915.",
@@ -106,24 +106,24 @@ SKIP: {
 		is_deeply([$novel->_attributes], [qw/_id added author related_novels review_count tags title year/], '_attributes okay');
 		is_deeply([$novel->author->_attributes], [qw/first_name last_name middle_name/], 'embedded _attributes okay');
 
-		my $found_novel = $db->novels->find_one($novel->id);
+		my $found_novel = $db->get_collection('novels')->find_one($novel->id);
 		is($found_novel->reviews->count, 3, 'joins_many works correctly');
 
 		$found_novel->set_year(1914);
 		$found_novel->author->set_middle_name('Conan');
 		$found_novel->update();
 
-		is($db->novels->find_one($found_novel->_id)->year, 1914, "novel's year successfully changed back");
-		is($db->novels->find_one({ _id => MongoDB::OID->new(value => $found_novel->oid) })->author->middle_name, 'Conan', "author's middle name successfully changed back");
+		is($db->get_collection('novels')->find_one($found_novel->_id)->year, 1914, "novel's year successfully changed back");
+		is($db->get_collection('novels')->find_one({ _id => MongoDB::OID->new(value => $found_novel->oid) })->author->middle_name, 'Conan', "author's middle name successfully changed back");
 		
 		is($found_novel->added->year, DateTime->now->year, 'DateTime objects correctly parsed by MongoDBx::Class::ParsedAttribute::DateTime');
 
 		$synopsis->delete;
 
-		my $syns = $db->synopsis->find({ 'novel.$id' => $novel->_id });
+		my $syns = $db->get_collection('synopsis')->find({ 'novel.$id' => $novel->_id });
 		is($syns->count, 0, 'Synopsis successfully removed');
 		
-		$db->reviews->update({ 'novel.$id' => $novel->_id }, { '$set' => { reviewer => 'John John' }, '$inc' => { score => 3 } }, { multiple => 1 });
+		$db->get_collection('reviews')->update({ 'novel.$id' => $novel->_id }, { '$set' => { reviewer => 'John John' }, '$inc' => { score => 3 } }, { multiple => 1 });
 		my @scores;
 		my $john_john = 1;
 		foreach ($novel->reviews->sort([ score => -1 ])->all) {
@@ -141,15 +141,15 @@ SKIP: {
 
 		# read novel from db again, without expanding it, to
 		# verify the review_count attribute was not saved
-		my $novel_fetched = $db->novels->find({ _id => $novel->_id })->next(1);
+		my $novel_fetched = $db->get_collection('novels')->find({ _id => $novel->_id })->next(1);
 		ok(!exists $novel_fetched->{review_count}, 'Transient value was not saved in DB');
 
-		$novel = $db->novels->find_one($novel->id); # refresh from DB
+		$novel = $db->get_collection('novels')->find_one($novel->id); # refresh from DB
 		$novel->update({ review_count => 4 });
 		is($novel->review_count, 3, 'Transient value not updated'); # really the correct behaviour?
 
 		# refresh again
-		$novel_fetched = $db->novels->find({ _id => $novel->_id })->next(1);
+		$novel_fetched = $db->get_collection('novels')->find({ _id => $novel->_id })->next(1);
 		ok(!exists $novel_fetched->{review_count}, 'Transient value was not saved in DB');
 		
 		my $novel2 = $novels_coll->insert({
@@ -169,7 +169,7 @@ SKIP: {
 		});
 
 		# refresh novel 2 without expanding
-		my $novel2_fetched = $db->novels->find({ _id => $novel2->_id })->next(1);
+		my $novel2_fetched = $db->get_collection('novels')->find({ _id => $novel2->_id })->next(1);
 		ok(!exists $novel2_fetched->{review_count}, 'Transient value was not saved in DB');
 
 		is($novel2->review_count, 0, 'Transient value is not inflated');

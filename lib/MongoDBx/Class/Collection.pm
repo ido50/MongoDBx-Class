@@ -2,12 +2,13 @@ package MongoDBx::Class::Collection;
 
 # ABSTRACT: A MongoDBx::Class collection object
 
-our $VERSION = "1.01";
+our $VERSION = "1.02";
 $VERSION = eval $VERSION;
 
 use Moose;
 use namespace::autoclean;
 use Carp;
+use version;
 
 extends 'MongoDB::Collection';
 
@@ -92,8 +93,10 @@ override 'find' => sub {
 		$q = $query ? $query : {};
 	}
 
+	my $conn_key = version->parse($MongoDB::VERSION) < v0.502.0 ? '_connection' : '_client';
+
 	my $cursor = MongoDBx::Class::Cursor->new(
-		_connection => $self->_database->_connection,
+		$conn_key => $self->_database->_connection,
 		_ns => $self->full_name, 
 		_query => $q, 
 		_limit => $limit, 

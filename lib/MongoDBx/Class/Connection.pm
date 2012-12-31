@@ -2,7 +2,7 @@ package MongoDBx::Class::Connection;
 
 # ABSTARCT: A connection to a MongoDB server
 
-our $VERSION = "1.01";
+our $VERSION = "1.02";
 $VERSION = eval $VERSION;
 
 use Moose;
@@ -93,7 +93,9 @@ database named C<$name>.
 =cut
 
 override 'get_database' => sub {
-	MongoDBx::Class::Database->new(_connection => shift, name => shift);
+	my $conn_key = version->parse($MongoDB::VERSION) < v0.502.0 ? '_connection' : '_client';
+
+	MongoDBx::Class::Database->new($conn_key => shift, name => shift);
 };
 
 =head2 safe( $boolean )
