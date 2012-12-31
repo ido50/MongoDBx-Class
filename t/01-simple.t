@@ -43,7 +43,7 @@ SKIP: {
 				middle_name => 'Conan',
 				last_name => 'Doyle',
 			},
-			added => DateTime->now(time_zone => 'Asia/Jerusalem'),
+			added => DateTime->now,
 			tags => [
 				{ category => 'mystery', subcategory => 'thriller' },
 				{ category => 'mystery', subcategory => 'detective' },
@@ -161,7 +161,7 @@ SKIP: {
 				middle_name => 'chromatic',
 				last_name => '',
 			},
-			added => DateTime->now(time_zone => 'Asia/Jerusalem'),
+			added => DateTime->now,
 			tags => [
 				{ category => 'programming', subcategory => 'perl' },
 			],
