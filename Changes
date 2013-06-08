@@ -1,6 +1,8 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+
+1.02      2013-01-01 00:38:58 Asia/Jerusalem
 	- Fixed previous failed attempt at adapting MongoDBx::Class
 	  to the new MongoDB version
 

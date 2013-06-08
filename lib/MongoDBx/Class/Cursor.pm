@@ -2,7 +2,7 @@ package MongoDBx::Class::Cursor;
 
 # ABSTRACT: A MongoDBx::Class cursor/iterator object for query results
 
-our $VERSION = "1.02";
+our $VERSION = "1.03";
 $VERSION = eval $VERSION;
 
 use Moose;
@@ -81,7 +81,7 @@ around 'sort' => sub {
 };
 
 sub _connection {
-	version->parse($MongoDB::VERSION) < v0.502.0 ? $_[0]->SUPER : $_[0]->_client;
+	version->parse($MongoDB::VERSION) < v0.502.0 ? $_[0]->SUPER::_connection : $_[0]->_client;
 }
 
 =head1 AUTHOR
