@@ -182,7 +182,7 @@ sub expand {
 					ref_id => $ref->{'$id'},
 				));
 			}
-		# is this an embedded document (or array-ref of embedded documents)?			
+		# is this an embedded document (or array-ref of embedded documents)?
 		} elsif ($_->documentation && $_->documentation eq 'MongoDBx::Class::EmbeddedDocument') {
 			my $edc_name = $_->{isa};
 			$edc_name =~ s/^${ns}:://;
