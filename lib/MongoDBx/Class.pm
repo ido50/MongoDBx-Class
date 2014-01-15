@@ -41,6 +41,8 @@ coerce 'ArrayOfMongoDBx::Class::CoercedReference'
 		return \@arr;
 	};
 
+=encoding utf8
+
 =head1 NAME
 
 MongoDBx::Class - Flexible ORM for MongoDB databases
