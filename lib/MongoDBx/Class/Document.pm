@@ -9,6 +9,8 @@ use Moose::Role;
 use namespace::autoclean;
 use Carp;
 
+with 'MongoDBx::Class::DocumentBase';
+
 =head1 NAME
 
 MongoDBx::Class::Document - A MongoDBx::Class document role
@@ -79,23 +81,9 @@ The following attributes are provided:
 The document's internal ID, represented as a L<MongoDB::OID> object. This
 is a required attribute.
 
-=head2 _collection
-
-The L<MongoDBx::Class::Collection> object representing the MongoDB collection
-in which the document is stored. This is a required attribute.
-
-=head2 _class
-
-A string. The name of the document class of this document. This is a required
-attribute.
-
 =cut
 
 has '_id' => (is => 'ro', isa => 'MongoDB::OID', required => 1);
-
-has '_collection' => (is => 'ro', isa => 'MongoDBx::Class::Collection', required => 1);
-
-has '_class' => (is => 'ro', isa => 'Str', required => 1);
 
 =head1 OBJECT METHODS
 
@@ -189,6 +177,10 @@ sub update {
 	}
 }
 
+sub save {
+	shift->update(undef, { upsert => 1 });
+}
+
 =head2 delete()
 
 =head2 remove()
@@ -212,49 +204,6 @@ sub remove { shift->delete }
 =head1 INTERNAL METHODS
 
 The following methods are only to be used internally.
-
-=head2 _database()
-
-Convenience method, shortcut for C<< $doc->_collection->_database >>.
-
-=cut
-
-sub _database {
-	shift->_collection->_database;
-}
-
-=head2 _connection()
-
-Convenience method, shortcut for C<< $doc->_database->_connection >>.
-
-=cut
-
-sub _connection {
-	shift->_database->_connection;
-}
-
-=head2 _attributes()
-
-Returns a list of names of all attributes the document object has, minus
-'_collection' and '_class', sorted alphabetically.
-
-=cut
-
-sub _attributes {
-	my @names;
-	foreach (shift->meta->get_all_attributes) {
-		next if $_->name =~ m/^_(class|collection)$/;
-		if ($_->{isa} =~ m/MongoDBx::Class::CoercedReference/ || ($_->documentation && $_->documentation eq 'MongoDBx::Class::EmbeddedDocument')) {
-			my $name = $_->name;
-			$name =~ s/^_//;
-			push(@names, $name);
-		} else {
-			push(@names, $_->name);
-		}
-	}
-
-	return sort @names;
-}
 
 =head2 _update_self()
 

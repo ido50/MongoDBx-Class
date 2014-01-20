@@ -207,6 +207,21 @@ around 'batch_insert' => sub {
 	}
 };
 
+sub create {
+	my ($self, $attrs) = @_;
+
+	croak "You must provide a hash-ref that includes the document class"
+		unless $attrs && ref $attrs && ref $attrs eq 'HASH' && $attrs->{_class};
+
+	#my $package = $self->_database->_connection->doc_classes->{$attrs->{_class}}
+	#	|| croak "Document class $attrs->{_class} does not exist";
+
+	$attrs->{_collection} = $self;
+	$attrs->{_id} = MongoDB::OID->new;
+
+	return $self->_database->_connection->expand($self->full_name, $attrs);
+}
+
 =head2 update( \%criteria, \%object, [ \%options ] )
 
 Searches for documents matching C<\%criteria> and updates them according

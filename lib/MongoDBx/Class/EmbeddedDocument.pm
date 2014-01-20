@@ -8,6 +8,8 @@ $VERSION = eval $VERSION;
 use Moose::Role;
 use namespace::autoclean;
 
+with 'MongoDBx::Class::DocumentBase';
+
 =head1 NAME
 
 MongoDBx::Class::EmbeddedDocument - A MongoDBx::Class embedded (sub-)document role
@@ -49,28 +51,6 @@ are documents that are entirely contained within parent MongoDB documents.
 The role provides expanded embedded documents with some common attributes
 and useful methods.
 
-=head1 ATTRIBUTES
-
-=head2 _collection
-
-The L<MongoDBx::Class::Collection> object representing the MongoDB collection
-in which this embedded document is stored (more correctly, the collection
-in which the L<MongoDBx::Class::Document> holding this embedded document
-is stored). This is a required attribute.
-
-=cut
-
-has '_collection' => (is => 'ro', isa => 'MongoDBx::Class::Collection', required => 1);
-
-=head2 _class
-
-A string. The name of the document class of this embedded document.
-A required attribute.
-
-=cut
-
-has '_class' => (is => 'ro', isa => 'Str', required => 1);
-
 =head1 METHODS
 
 The following methods are provided:
@@ -91,41 +71,6 @@ sub as_hashref {
 	}
 
 	return $hash;
-}
-
-=head1 INTERNAL METHODS
-
-=head2 _database()
-
-Convenience shortcut for running C<< $embd_doc->_collection->_database >>.
-
-=cut
-
-sub _database {
-	shift->_collection->_database;
-}
-
-=head2 _attributes()
-
-Returns a list of names of all attributes the embedded document object has,
-minus '_collection' and '_class', sorted alphabetically.
-
-=cut
-
-sub _attributes {
-	my @names;
-	foreach (shift->meta->get_all_attributes) {
-		next if $_->name =~ m/^_(class|collection)$/;
-		if ($_->{isa} =~ m/MongoDBx::Class::CoercedReference/ || ($_->documentation && $_->documentation eq 'MongoDBx::Class::EmbeddedDocument')) {
-			my $name = $_->name;
-			$name =~ s/^_//;
-			push(@names, $name);
-		} else {
-			push(@names, $_->name);
-		}
-	}
-
-	return sort @names;
 }
 
 =head1 AUTHOR
