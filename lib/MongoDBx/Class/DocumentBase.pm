@@ -104,6 +104,8 @@ sub TO_JSON {
 
 	%json = map { $_ => $json{$_} } grep { defined $json{$_} } keys %json;
 
+	$json{_class} = $self->_class;
+
 	return \%json;
 }
 
