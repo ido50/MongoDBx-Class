@@ -1,6 +1,18 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+	- Added support for creating document objects without first inserting
+	  them to the database (using the create() method now in MongoDBx::Class::Collection).
+	- The MongoDBx::Class::Document and MongoDBx::Class::EmbeddedDocument
+	  now share a base class - MongoDBx::Class::DocumentBase - with common
+	  methods and attributes.
+	- Added a TO_JSON method for both documents and embedded documents (in
+	  MongoDBx::Class::DocumentBase) that turns a document (or embedded
+	  document) into a hash-ref. Useful for automatic conversion of objects
+	  to JSON using the various JSON modules on CPAN.
+	- Moved to a 3 semantic versioning system.
+
+1.03      2014-01-15 21:25:15 Asia/Jerusalem
 	- Bugfix new versions of MongoDB
 
 1.02      2013-01-01 00:38:58 Asia/Jerusalem

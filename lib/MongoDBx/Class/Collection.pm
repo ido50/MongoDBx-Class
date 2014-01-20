@@ -2,7 +2,7 @@ package MongoDBx::Class::Collection;
 
 # ABSTRACT: A MongoDBx::Class collection object
 
-our $VERSION = "1.03";
+our $VERSION = "1.040000";
 $VERSION = eval $VERSION;
 
 use Moose;
