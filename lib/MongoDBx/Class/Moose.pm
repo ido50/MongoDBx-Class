@@ -169,7 +169,7 @@ sub has_many {
 		foreach (@{$self->$attr || []}) {
 			push(@docs, $_->load);
 		}
-		return @docs;
+		return wantarray ? @docs : \@docs;
 	});
 }
 
@@ -239,7 +239,9 @@ sub holds_many {
 
 		my $attr = '_'.$name;
 
-		return @{$self->$attr || []};
+		my @arr = @{$self->$attr || []};
+
+		return wantarray ? @arr : \@arr;
 	});
 }
 

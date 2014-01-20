@@ -100,7 +100,7 @@ The following object methods are provided:
 sub TO_JSON {
 	my $self = shift;
 
-	my %json = map { $_ => $self->_jsonify_val($self->$_) } $self->_attributes;
+	my %json = map { my $val = $self->$_; $_ => $self->_jsonify_val($val) } $self->_attributes;
 
 	%json = map { $_ => $json{$_} } grep { defined $json{$_} } keys %json;
 
