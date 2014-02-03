@@ -67,10 +67,10 @@ Normal usage:
 	$conn->safe(1); # we could've also just passed "safe => 1" to $dbx->connect() above
 
 	# get a MongoDB database
-	my $db = $conn->get_database('people');
+	my $db = $conn->get_database('myapp');
 
 	# insert a person
-	my $person = $db->insert({ name => 'Some Guy', birth_date => '1984-06-12', _class => 'Person' });
+	my $person = $db->get_collection('people')->insert({ name => 'Some Guy', birth_date => '1984-06-12', _class => 'Person' });
 
 	print "Created person ".$person->name." (".$person->id.")\n";
 
