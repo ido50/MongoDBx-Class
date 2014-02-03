@@ -13,7 +13,7 @@ my $dbx = MongoDBx::Class->new(namespace => 'MongoDBxTestSchema');
 if (scalar(keys %{$dbx->doc_classes}) != 5) {
 	plan skip_all => "Temporary skip due to schema not being found";
 } else {
-	plan tests => 27;
+	plan tests => 32;
 }
 
 SKIP: {
@@ -108,6 +108,13 @@ SKIP: {
 
 		my $found_novel = $db->get_collection('novels')->find_one($novel->id);
 		is($found_novel->reviews->count, 3, 'joins_many works correctly');
+		is(ref $found_novel->reviews, 'MongoDBx::Class::Cursor', 'joins_many attribute gives a MongoDBx::Class::Cursor');
+
+		my @all_reviews = $found_novel->reviews->all;
+		is(scalar @all_reviews, 3, 'all method gives an array containing all reviews');
+		for( @all_reviews ) {
+			is(ref $_, 'MongoDBxTestSchema::Review', 'array element is MongoDBxTestSchema::Review objects');
+		}
 
 		$found_novel->set_year(1914);
 		$found_novel->author->set_middle_name('Conan');

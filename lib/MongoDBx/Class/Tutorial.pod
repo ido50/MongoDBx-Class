@@ -556,7 +556,7 @@ If we now run C<< $novel->reviews() >>, we'd get a L<MongoDBx::Class::Cursor>
 back. And since we've created a method modification in the Novel class
 on this method, this cursor will also be sorted.
 
-	foreach ($novel->reviews) {
+	foreach ($novel->reviews->all) {
 		# $_ is now a MyApp::Schema::Review object
 		print $_->score;
 	}
