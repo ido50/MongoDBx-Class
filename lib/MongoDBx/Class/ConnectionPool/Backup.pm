@@ -2,7 +2,7 @@ package MongoDBx::Class::ConnectionPool::Backup;
 
 # ABSTARCT: A simple connection pool with a backup connection
 
-our $VERSION = "1.03";
+our $VERSION = "1.030001";
 $VERSION = eval $VERSION;
 
 use Moose;
@@ -201,7 +201,7 @@ L<MongoDBx::Class>, L<MongoDB::Connection>.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010-2012 Ido Perlmuter.
+Copyright 2010-2014 Ido Perlmuter.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

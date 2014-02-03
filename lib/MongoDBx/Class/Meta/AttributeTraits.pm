@@ -2,7 +2,7 @@ package MongoDBx::Class::Meta::AttributeTraits;
 
 # ABSTRACT: Attribute traits provided by MongoDBx::Class
 
-our $VERSION = "1.03";
+our $VERSION = "1.030001";
 $VERSION = eval $VERSION;
 
 =head1 NAME
@@ -15,7 +15,7 @@ package MongoDBx::Class::Meta::AttributeTraits::Parsed;
 
 # ABSTRACT: An attribute trait for attributes automatically expanded and collapsed by a parser class
 
-our $VERSION = "1.03";
+our $VERSION = "1.030001";
 $VERSION = eval $VERSION;
 
 use Moose::Role;
@@ -42,7 +42,7 @@ package MongoDBx::Class::Meta::AttributeTraits::Transient;
 
 # ABSTRACT: An attribute trait for attributes not saved in the database
 
-our $VERSION = "1.03";
+our $VERSION = "1.030001";
 $VERSION = eval $VERSION;
 
 use Moose::Role;
@@ -59,7 +59,7 @@ Ido Perlmuter, C<< <ido at ido50.net> >>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010-2012 Ido Perlmuter.
+Copyright 2010-2014 Ido Perlmuter.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
