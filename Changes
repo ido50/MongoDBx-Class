@@ -1,6 +1,7 @@
 Revision history for MongoDBx::Class
 
 {{$NEXT}}
+	- Bugfix: wrong number of tests to skip in 01-simple.t
 
 1.030001  2014-02-03 23:13:49 Asia/Jerusalem
 	- Documentation fixes: joins_many relationship example was

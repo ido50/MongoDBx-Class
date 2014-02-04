@@ -2,7 +2,7 @@ package MongoDBx::Class::Connection;
 
 # ABSTARCT: A connection to a MongoDB server
 
-our $VERSION = "1.030001";
+our $VERSION = "1.030002";
 $VERSION = eval $VERSION;
 
 use Moose;

@@ -2,7 +2,7 @@ package MongoDBx::Class::ParsedAttribute::DateTime;
 
 # ABSTRACT: An automatic DateTime parser for MongoDBx::Class document classes
 
-our $VERSION = "1.030001";
+our $VERSION = "1.030002";
 $VERSION = eval $VERSION;
 
 use Moose;

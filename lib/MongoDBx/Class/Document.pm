@@ -2,7 +2,7 @@ package MongoDBx::Class::Document;
 
 # ABSTRACT: A MongoDBx::Class document role
 
-our $VERSION = "1.030001";
+our $VERSION = "1.030002";
 $VERSION = eval $VERSION;
 
 use Moose::Role;

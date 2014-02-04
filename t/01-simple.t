@@ -23,7 +23,7 @@ SKIP: {
 		my $conn;
 		eval { $conn = $dbx->connect };
 
-		skip "Can't connect to MongoDB server", 26 if $@;
+		skip "Can't connect to MongoDB server", 31 if $@;
 
 		$conn->safe(1);
 		is($conn->safe, 1, "Using safe operations by default");

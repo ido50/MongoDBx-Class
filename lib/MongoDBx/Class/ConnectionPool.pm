@@ -2,7 +2,7 @@ package MongoDBx::Class::ConnectionPool;
 
 # ABSTARCT: A simple connection pool for MongoDBx::Class
 
-our $VERSION = "1.030001";
+our $VERSION = "1.030002";
 $VERSION = eval $VERSION;
 
 use Moose::Role;

@@ -2,7 +2,7 @@ package MongoDBx::Class::ParsedAttribute;
 
 # ABSTRACT: A Moose role for automatically expanded and collapsed document attributes.
 
-our $VERSION = "1.030001";
+our $VERSION = "1.030002";
 $VERSION = eval $VERSION;
 
 use Moose::Role;
