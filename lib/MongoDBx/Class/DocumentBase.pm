@@ -1,6 +1,6 @@
 package MongoDBx::Class::DocumentBase;
 
-# ABSTRACT: A MongoDBx::Class document role
+# ABSTRACT: Base role for documents and embedded documents
 
 our $VERSION = "1.040000";
 $VERSION = eval $VERSION;
@@ -12,64 +12,17 @@ use Scalar::Util qw/blessed/;
 
 =head1 NAME
 
-MongoDBx::Class::Document - A MongoDBx::Class document role
+MongoDBx::Class::DocumentBase - Base role for documents and embedded documents
 
 =head1 SYNOPSIS
 
-	# create a document class
-	package MyApp::Schema::Novel;
-
-	use MongoDBx::Class::Moose; # use this instead of Moose;
-	use namespace::autoclean;
-
-	with 'MongoDBx::Class::Document';
-
-	has 'title' => (is => 'ro', isa => 'Str', required => 1, writer => 'set_title');
-
-	holds_one 'author' => (is => 'ro', isa => 'MyApp::Schema::PersonName', required => 1, writer => 'set_author');
-
-	has 'year' => (is => 'ro', isa => 'Int', predicate => 'has_year', writer => 'set_year');
-
-	has 'added' => (is => 'ro', isa => 'DateTime', traits => ['Parsed'], required => 1);
-
-	has 'review_count' => (is => 'rw', isa => 'Int', traits => ['Transient'], builder => '_build_review_count');
-	
-	holds_many 'tags' => (is => 'ro', isa => 'MyApp::Schema::Tag', predicate => 'has_tags');
-
-	joins_one 'synopsis' => (is => 'ro', isa => 'Synopsis', coll => 'synopsis', ref => 'novel');
-
-	has_many 'related_novels' => (is => 'ro', isa => 'Novel', predicate => 'has_related_novels', writer => 'set_related_novels', clearer => 'clear_related_novels');
-
-	joins_many 'reviews' => (is => 'ro', isa => 'Review', coll => 'reviews', ref => 'novel');
-
-	sub _build_review_count { shift->reviews->count }
-
-	sub print_related_novels {
-		my $self = shift;
-
-		foreach my $other_novel ($self->related_novels) {
-			print $other_novel->title, ', ',
-			      $other_novel->year, ', ',
-			      $other_novel->author->name, "\n";
-		}
-	}
-
-	around 'reviews' => sub {
-		my ($orig, $self) = (shift, shift);
-
-		my $cursor = $self->$orig;
-		
-		return $cursor->sort([ year => -1, title => 1, 'author.last_name' => 1 ]);
-	};
-
-	__PACKAGE__->meta->make_immutable;
+	# used internally
 
 =head1 DESCRIPTION
 
-MongoDBx::Class::Document is a L<Moose role|Moose::Role> meant to be consumed
-by document classes. It provides expanded MongoDB documents with some
-common attributes, and needed methods for easy updating and deleting of
-documents.
+C<MongoDBx::Class::DocumentBase> is a base L<role|Moose::Role> providing both
+regular documents (L<MongoDBx::Class::Document>) and embedded documents
+(L<MongoDBx::Class::EmbeddedDocument>) with common attributes and methods.
 
 =head1 ATTRIBUTES
 
@@ -95,6 +48,12 @@ has '_class' => (is => 'ro', isa => 'Str', required => 1);
 
 The following object methods are provided:
 
+=head2 TO_JSON()
+
+Creates a JSON representation of the object. The methods' name is for compatibility
+with modules from the L<JSON> family, who expect this method to exist when
+encountering objects during serialization.
+
 =cut
 
 sub TO_JSON {
@@ -107,32 +66,6 @@ sub TO_JSON {
 	$json{_class} = $self->_class;
 
 	return \%json;
-}
-
-sub _jsonify_val {
-	my ($self, $val) = @_;
-
-	if (blessed $val) {
-		if (blessed $val eq 'DateTime') {
-			return DateTime::Format::W3CDTF->format_datetime($val);
-		} else {
-			return $val->TO_JSON;
-		}
-	} elsif (ref $val && ref $val eq 'ARRAY') {
-		my @array;
-		foreach my $item (@$val) {
-			push(@array, $self->_jsonify_val($item));
-		}
-		return \@array;
-	} elsif (ref $val && ref $val eq 'HASH') {
-		my $hash = {};
-		foreach my $key (keys %$val) {
-			$hash->{$_} = $self->_jsonify_val($val->{$key});
-		}
-		return $hash;
-	}
-
-	return $val;
 }
 
 =head1 INTERNAL METHODS
@@ -180,6 +113,32 @@ sub _attributes {
 	}
 
 	return sort @names;
+}
+
+sub _jsonify_val {
+	my ($self, $val) = @_;
+
+	if (blessed $val) {
+		if (blessed $val eq 'DateTime') {
+			return DateTime::Format::W3CDTF->format_datetime($val);
+		} else {
+			return $val->TO_JSON;
+		}
+	} elsif (ref $val && ref $val eq 'ARRAY') {
+		my @array;
+		foreach my $item (@$val) {
+			push(@array, $self->_jsonify_val($item));
+		}
+		return \@array;
+	} elsif (ref $val && ref $val eq 'HASH') {
+		my $hash = {};
+		foreach my $key (keys %$val) {
+			$hash->{$_} = $self->_jsonify_val($val->{$key});
+		}
+		return $hash;
+	}
+
+	return $val;
 }
 
 =head1 AUTHOR

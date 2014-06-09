@@ -58,7 +58,10 @@ Normal usage:
 
 	# if MongoDBx::Class can't find your model schema (possibly because
 	# it exists in some different location), you can do this:
-	my $dbx = MongoDBx::Class->new(namespace => 'MyApp::Model::DB', search_dirs => ['/path/to/model/dir']);
+	my $dbx = MongoDBx::Class->new(
+		namespace => 'MyApp::Model::DB',
+		search_dirs => ['/path/to/model/dir']
+	);
 
 	# connect to a MongoDB server
 	my $conn = $dbx->connect(host => 'localhost', port => 27017);
@@ -69,7 +72,7 @@ Normal usage:
 	# get a MongoDB database
 	my $db = $conn->get_database('people');
 
-	# insert a person
+	# insert a person (assuming you have a Person document class)
 	my $person = $db->insert({ name => 'Some Guy', birth_date => '1984-06-12', _class => 'Person' });
 
 	print "Created person ".$person->name." (".$person->id.")\n";
@@ -77,6 +80,15 @@ Normal usage:
 	$person->update({ name => 'Some Smart Guy' });
 
 	$person->delete;
+
+	# you can also create objects before inserting them to the database,
+	# thus taking advantage of Moose's type validation, default values etc.
+	my $other_person = $coll->create({ name => 'Some Other Guy', birth_date => '1984-12-06', _class => 'Person' });
+
+	print "Created another person (".$person->id."), not saved to database yet.\n";
+
+	# to save the object to the database, call save() on it:
+	$other_person->save;
 
 See L<MongoDBx::Class::ConnectionPool> for simple connection pool usage.
 

@@ -51,6 +51,10 @@ are documents that are entirely contained within parent MongoDB documents.
 The role provides expanded embedded documents with some common attributes
 and useful methods.
 
+=head1 CONSUMES
+
+L<MongoDBx::Class::DocumentBase>
+
 =head1 METHODS
 
 The following methods are provided:

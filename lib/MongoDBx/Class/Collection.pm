@@ -207,6 +207,17 @@ around 'batch_insert' => sub {
 	}
 };
 
+=head2 create( \%attrs )
+
+Creates a new object representing a document, but doesn't C<insert()> it into the
+database. Thus the object only exists in memory, until explicitly saved (see
+L<MongoDBx::Class::Document/"save()">).
+
+This is useful for taking advantage of L<Moose>'s type validation, default values,
+lazy building, etc.
+
+=cut
+
 sub create {
 	my ($self, $attrs) = @_;
 
@@ -217,7 +228,7 @@ sub create {
 	#	|| croak "Document class $attrs->{_class} does not exist";
 
 	$attrs->{_collection} = $self;
-	$attrs->{_id} = MongoDB::OID->new;
+	$attrs->{_id} ||= MongoDB::OID->new;
 
 	return $self->_database->_connection->expand($self->full_name, $attrs);
 }

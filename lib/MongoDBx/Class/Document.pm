@@ -72,6 +72,10 @@ by document classes. It provides expanded MongoDB documents with some
 common attributes, and needed methods for easy updating and deleting of
 documents.
 
+=head1 CONSUMES
+
+L<MongoDBx::Class::DocumentBase>
+
 =head1 ATTRIBUTES
 
 The following attributes are provided:
@@ -176,6 +180,13 @@ sub update {
 		return $self->_collection->update({ _id => $self->_id }, $self->_connection->collapse($doc), $_[1]);
 	}
 }
+
+=head2 save()
+
+Saves a document object to the database. Used for inserting document objects
+created with L<MongoDBx::Class::Collection/"create( \%attrs )">.
+
+=cut
 
 sub save {
 	shift->update(undef, { upsert => 1 });

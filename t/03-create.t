@@ -12,7 +12,7 @@ my $dbx = MongoDBx::Class->new(namespace => 'MongoDBxTestSchema');
 if (scalar(keys %{$dbx->doc_classes}) != 5) {
 	plan skip_all => "Temporary skip due to schema not being found";
 } else {
-	plan tests => 10;
+	plan tests => 11;
 }
 
 SKIP: {
@@ -22,7 +22,7 @@ SKIP: {
 		my $conn;
 		eval { $conn = $dbx->connect(safe => 1) };
 
-		skip "Can't connect to MongoDB server", 9 if $@;
+		skip "Can't connect to MongoDB server", 10 if $@;
 
 		my $db = $conn->get_database('mongodbx_class_test');
 		$db->drop;
@@ -63,6 +63,19 @@ SKIP: {
 		is($json->{author}->{middle_name}, 'Conan', 'Returned hash-ref has correct author middle name');
 		is(ref $json->{tags}, 'ARRAY', 'Returned hash-ref has array-ref for tags');
 		is(scalar @{$json->{tags}}, 3, 'Returned hash-ref has 3 tags');
+
+		# let's make sure our own _ids are not overwritten
+		my $other_novel = $novels_coll->create({
+			_id => 'asdf',
+			_class => 'Novel',
+			title => 'The Falley of Vear',
+			author => {
+				first_name => 'Darthur',
+				middle_name => 'Conan',
+				last_name => 'Oyle'
+			}
+		});
+		is($other_novel->_id, 'asdf', 'our own _id is not overwritten');
 
 		$db->drop;
 	}
